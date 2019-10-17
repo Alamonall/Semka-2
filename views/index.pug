@@ -1,0 +1,23 @@
+extends layout
+
+block content
+  div(class='container')
+    div(class="card")
+      article(class="card-body")
+        form(method="post" action='/welcome')
+          div(class="form-group")
+            div(class="input-group")
+              div(class="input-group-prepend")
+                span(class="input-group-text")
+                  i(class="fa fa-user")
+              input(name="username" 
+                    class="form-control" placeholder="Логин")
+          div(class="form-group")
+            div(class="input-group")
+              div(class="input-group-prepend")
+                span(class="input-group-text")
+                  i(class="fa fa-lock")
+              input(name='password' class="form-control" 
+                    placeholder="******" type="password")
+          div(class="form-group")
+            button(type="submit" class="btn btn-primary btn-block") Войти

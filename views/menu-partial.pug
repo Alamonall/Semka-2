@@ -1,0 +1,14 @@
+mixin admin-list
+    ul(class='menu-main')
+        li
+            a(href='/admin/admin') Администрирование
+        li
+            a(href='/admin/settings') Настройки
+        li
+            a(href='/admin/verifycontrol') Контроль верификации
+        li
+            a(href='/admin/user_list') Список пользователей
+mixin user-list
+    ul(class='menu-main')
+        li
+            a(href='/user/verifycontrol') Контроль верификации

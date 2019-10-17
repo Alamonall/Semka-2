@@ -1,0 +1,22 @@
+extends layout
+
+include menu-partial 
+
+block content   
+        +admin-list
+        h3= title
+        div(class='container-fluid')
+            table(class='table table-bordered')
+                thead
+                 tr
+                  th(scope='col') Ник
+                  th(scope='col') Имя
+                tbody
+                 each user in users
+                  tr
+                   td= user.UserName
+                   td= user.UserFIO
+                 
+
+                  
+                  

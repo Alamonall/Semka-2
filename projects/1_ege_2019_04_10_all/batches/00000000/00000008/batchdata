@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<batch>
+  <page guid="88cc7c1f-1658-439d-844a-d88f7c076a06" number="1" template="Регистрационный_чб">
+    <field name="Фамилия" found="True">карабанин</field>
+    <field name="Имя" found="True">максим</field>
+    <field name="Отчество" found="True">игоревич</field>
+    <field name="Документ_серия" found="True">2518</field>
+    <field name="Документ_номер" found="True">579088</field>
+    <field name="Удален" found="True">0</field>
+    <field name="Не_закончил" found="True">0</field>
+  </page>
+  <page guid="f10d2a45-307c-410d-85e4-af592f14a947" number="2" template="Регистрационный_чб">
+    <field name="Фамилия" found="True">сокольникова</field>
+    <field name="Имя" found="True">юлия</field>
+    <field name="Отчество" found="True">олеговна</field>
+    <field name="Документ_серия" found="True">2515</field>
+    <field name="Документ_номер" found="True">100743</field>
+    <field name="Удален" found="True">0</field>
+    <field name="Не_закончил" found="True">0</field>
+  </page>
+  <page guid="6295d845-3e63-40d8-a874-a96094c03f25" number="3" template="Регистрационный_чб">
+    <field name="Фамилия" found="True">истомахин</field>
+    <field name="Имя" found="True">алексей</field>
+    <field name="Отчество" found="True">александрович</field>
+    <field name="Документ_серия" found="True">2512</field>
+    <field name="Документ_номер" found="True">721339</field>
+    <field name="Удален" found="True">0</field>
+    <field name="Не_закончил" found="True">0</field>
+  </page>
+  <page guid="a10f799b-940d-4d41-9073-cc9ee35a713a" number="4" template="Регистрационный_чб">
+    <field name="Фамилия" found="True">попов</field>
+    <field name="Имя" found="True">тимофей</field>
+    <field name="Отчество" found="True">дмитриевич</field>
+    <field name="Документ_серия" found="True">2514</field>
+    <field name="Документ_номер" found="True">978254</field>
+    <field name="Удален" found="True">0</field>
+    <field name="Не_закончил" found="True">0</field>
+  </page>
+</batch>

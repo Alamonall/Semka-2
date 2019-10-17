@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<batch>
+  <page guid="04d34133-53cd-4fe8-9447-94ba10be8ca7" number="1" template="Регистрационный_чб">
+    <field name="Фамилия" found="True">галсанов</field>
+    <field name="Имя" found="True">артем</field>
+    <field name="Отчество" found="True">григорьевич</field>
+    <field name="Документ_серия" found="True">2512</field>
+    <field name="Документ_номер" found="True">726931</field>
+    <field name="Удален" found="True">0</field>
+    <field name="Не_закончил" found="True">0</field>
+  </page>
+  <page guid="73694d73-eed5-49f7-990b-9e28f3037208" number="2" template="Регистрационный_чб">
+    <field name="Фамилия" found="True">зайцев</field>
+    <field name="Имя" found="True">дмитрий</field>
+    <field name="Отчество" found="True">андреевич</field>
+    <field name="Документ_серия" found="True">2513</field>
+    <field name="Документ_номер" found="True">844605</field>
+    <field name="Удален" found="True">0</field>
+    <field name="Не_закончил" found="True">0</field>
+  </page>
+  <page guid="53691392-8669-4f57-9809-f7c414de07ef" number="3" template="Регистрационный_чб">
+    <field name="Фамилия" found="True">голубь</field>
+    <field name="Имя" found="True">денис</field>
+    <field name="Отчество" found="True">олегович</field>
+    <field name="Документ_серия" found="True">2515</field>
+    <field name="Документ_номер" found="True">072661</field>
+    <field name="Удален" found="True">0</field>
+    <field name="Не_закончил" found="True">0</field>
+  </page>
+</batch>

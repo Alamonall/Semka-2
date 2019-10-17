@@ -1,0 +1,26 @@
+extends layout
+
+include menu-partial 
+
+block content   
+        +admin-list
+        h3= title
+        div(class='container-fluid')
+            div(class='form-group row')
+                    label(class="col-sm-3 col-form-label") База данных:
+                    div(class='col-sm-6')
+                        select(name='database' class="form-control")
+                            each db in dbs
+                                option(value="")= db.name
+                            else
+                                option(value="") null
+            table(class='table table-bordered')
+                tbody
+                tr
+                td Test0 
+                td Test1
+                td Test1
+                td Test1
+                td Test1
+                td Test1
+            button(type="submit" class='btn btn-primary') Проверить

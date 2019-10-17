@@ -1,0 +1,215 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<batch>
+  <page guid="1b87704e-79ca-44b3-a805-6def49c0a61b" number="1" template="(№1) Математика базовая_чб">
+    <field name="В01" found="True">2,4</field>
+    <field name="В02" found="True">16</field>
+    <field name="В03" found="True">
+    </field>
+    <field name="В04" found="True">
+    </field>
+    <field name="В05" found="True">24</field>
+    <field name="В06" found="True">
+    </field>
+    <field name="В07" found="True">
+    </field>
+    <field name="В08" found="True">
+    </field>
+    <field name="В09" found="True">2134</field>
+    <field name="В10" found="True">
+    </field>
+    <field name="В11" found="True">8481</field>
+    <field name="В12" found="True">5</field>
+    <field name="В13" found="True">
+    </field>
+    <field name="В14" found="True">1342</field>
+    <field name="В15" found="True">4</field>
+    <field name="В16" found="True">
+    </field>
+    <field name="В17" found="True">2134</field>
+    <field name="В18" found="True">12</field>
+    <field name="В19" found="True">3975</field>
+    <field name="В20" found="True">11</field>
+    <field name="Замена_задание_В01" found="True">
+    </field>
+    <field name="Замена_ответ_В01" found="True">
+    </field>
+    <field name="Замена_задание_В02" found="True">
+    </field>
+    <field name="Замена_ответ_В02" found="True">
+    </field>
+    <field name="Замена_задание_В03" found="True">
+    </field>
+    <field name="Замена_ответ_В03" found="True">
+    </field>
+    <field name="Замена_задание_В04" found="True">
+    </field>
+    <field name="Замена_ответ_В04" found="True">
+    </field>
+    <field name="Замена_задание_В05" found="True">
+    </field>
+    <field name="Замена_ответ_В05" found="True">
+    </field>
+    <field name="Замена_задание_В06" found="True">
+    </field>
+    <field name="Замена_ответ_В06" found="True">
+    </field>
+  </page>
+  <page guid="ad1c0f71-2b12-4283-bd64-392f4d5ec9e9" number="2" template="(№1) Математика базовая_чб">
+    <field name="В01" found="True">
+    </field>
+    <field name="В02" found="True">
+    </field>
+    <field name="В03" found="True">
+    </field>
+    <field name="В04" found="True">192</field>
+    <field name="В05" found="True">
+    </field>
+    <field name="В06" found="True">
+    </field>
+    <field name="В07" found="True">
+    </field>
+    <field name="В08" found="True">36</field>
+    <field name="В09" found="True">3241</field>
+    <field name="В10" found="True">
+    </field>
+    <field name="В11" found="True">8</field>
+    <field name="В12" found="True">3</field>
+    <field name="В13" found="True">480</field>
+    <field name="В14" found="True">2314</field>
+    <field name="В15" found="True">
+    </field>
+    <field name="В16" found="True">
+    </field>
+    <field name="В17" found="True">1423</field>
+    <field name="В18" found="True">23</field>
+    <field name="В19" found="True">
+    </field>
+    <field name="В20" found="True">
+    </field>
+    <field name="Замена_задание_В01" found="True">
+    </field>
+    <field name="Замена_ответ_В01" found="True">
+    </field>
+    <field name="Замена_задание_В02" found="True">
+    </field>
+    <field name="Замена_ответ_В02" found="True">
+    </field>
+    <field name="Замена_задание_В03" found="True">
+    </field>
+    <field name="Замена_ответ_В03" found="True">
+    </field>
+    <field name="Замена_задание_В04" found="True">
+    </field>
+    <field name="Замена_ответ_В04" found="True">
+    </field>
+    <field name="Замена_задание_В05" found="True">
+    </field>
+    <field name="Замена_ответ_В05" found="True">
+    </field>
+    <field name="Замена_задание_В06" found="True">
+    </field>
+    <field name="Замена_ответ_В06" found="True">
+    </field>
+  </page>
+  <page guid="20448b6a-b59c-4a1d-b9ce-51068c2c855b" number="3" template="(№1) Математика базовая_чб">
+    <field name="В01" found="True">214</field>
+    <field name="В02" found="True">16</field>
+    <field name="В03" found="True">75</field>
+    <field name="В04" found="True">
+    </field>
+    <field name="В05" found="True">
+    </field>
+    <field name="В06" found="True">915</field>
+    <field name="В07" found="True">
+    </field>
+    <field name="В08" found="True">815</field>
+    <field name="В09" found="True">2413</field>
+    <field name="В10" found="True">0168</field>
+    <field name="В11" found="True">2,5</field>
+    <field name="В12" found="True">5</field>
+    <field name="В13" found="True">90</field>
+    <field name="В14" found="True">
+    </field>
+    <field name="В15" found="True">
+    </field>
+    <field name="В16" found="True">
+    </field>
+    <field name="В17" found="True">3142</field>
+    <field name="В18" found="True">3</field>
+    <field name="В19" found="True">3759</field>
+    <field name="В20" found="True">91</field>
+    <field name="Замена_задание_В01" found="True">20</field>
+    <field name="Замена_ответ_В01" found="True">5</field>
+    <field name="Замена_задание_В02" found="True">
+    </field>
+    <field name="Замена_ответ_В02" found="True">
+    </field>
+    <field name="Замена_задание_В03" found="True">
+    </field>
+    <field name="Замена_ответ_В03" found="True">
+    </field>
+    <field name="Замена_задание_В04" found="True">
+    </field>
+    <field name="Замена_ответ_В04" found="True">
+    </field>
+    <field name="Замена_задание_В05" found="True">
+    </field>
+    <field name="Замена_ответ_В05" found="True">
+    </field>
+    <field name="Замена_задание_В06" found="True">
+    </field>
+    <field name="Замена_ответ_В06" found="True">
+    </field>
+  </page>
+  <page guid="aaaf7cf1-d417-431d-a33d-875b4e30e27a" number="4" template="(№1) Математика базовая_чб">
+    <field name="В01" found="True">214</field>
+    <field name="В02" found="True">4</field>
+    <field name="В03" found="True">75</field>
+    <field name="В04" found="True">
+    </field>
+    <field name="В05" found="True">5</field>
+    <field name="В06" found="True">915</field>
+    <field name="В07" found="True">9</field>
+    <field name="В08" found="True">515</field>
+    <field name="В09" found="True">3124</field>
+    <field name="В10" found="True">
+    </field>
+    <field name="В11" found="True">3</field>
+    <field name="В12" found="True">3</field>
+    <field name="В13" found="True">90</field>
+    <field name="В14" found="True">
+    </field>
+    <field name="В15" found="True">
+    </field>
+    <field name="В16" found="True">
+    </field>
+    <field name="В17" found="True">3142</field>
+    <field name="В18" found="True">12</field>
+    <field name="В19" found="True">
+    </field>
+    <field name="В20" found="True">
+    </field>
+    <field name="Замена_задание_В01" found="True">2</field>
+    <field name="Замена_ответ_В01" found="True">16</field>
+    <field name="Замена_задание_В02" found="True">
+    </field>
+    <field name="Замена_ответ_В02" found="True">
+    </field>
+    <field name="Замена_задание_В03" found="True">
+    </field>
+    <field name="Замена_ответ_В03" found="True">
+    </field>
+    <field name="Замена_задание_В04" found="True">
+    </field>
+    <field name="Замена_ответ_В04" found="True">
+    </field>
+    <field name="Замена_задание_В05" found="True">
+    </field>
+    <field name="Замена_ответ_В05" found="True">
+    </field>
+    <field name="Замена_задание_В06" found="True">
+    </field>
+    <field name="Замена_ответ_В06" found="True">
+    </field>
+  </page>
+</batch>

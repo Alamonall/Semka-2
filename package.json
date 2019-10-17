@@ -1,0 +1,37 @@
+{
+  "name": "semka1",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "hrstart": "node ./app",
+    "devstart": "nodemon -L ./bin/www"
+  },
+  "dependencies": {
+    "connect-flash": "^0.1.1",
+    "cookie-parser": "~1.4.4",
+    "crypto": "^1.0.1",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "express-session": "^1.16.2",
+    "gm": "^1.23.1",
+    "http-errors": "~1.6.3",
+    "iconv-lite": "^0.5.0",
+    "imagemagick": "^0.1.3",
+    "logger": "0.0.1",
+    "memory": "0.0.3",
+    "morgan": "~1.9.1",
+    "msnodesqlv8": "^0.8.3",
+    "mysql": "^2.17.1",
+    "node-gyp": "^5.0.3",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0",
+    "pug": "^2.0.4",
+    "sharp": "^0.23.1",
+    "xml2js": "^0.4.22",
+    "xmlbuilder": "^13.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.2"
+  }
+}

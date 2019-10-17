@@ -1,0 +1,5 @@
+"RULE_ID";"RULE_NAME";"RULE_TYPE";"RULE_CERTAIN";"RULE_ENABLED";"RULE_TYPE_NAME"
+"128956";"BarCode";"CExpressionRule";"1";"0";"Проверка с условием"
+"128959";"Barcode_Symbol";"CRegularExpressionRule";"0";"1";"Регулярное выражение"
+"128962";"Очистка лок.номера";"CExpressionRule";"0";"0";"Проверка с условием"
+"128965";"BarCode1";"CExpressionRule";"0";"1";"Проверка с условием"

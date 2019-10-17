@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<batch>
+  <page guid="12dc43dd-9c53-45ac-ba5d-779d60d43f8d" number="1" template="(№1) Русский язык_чб">
+    <field name="В01" found="True">34</field>
+    <field name="В02" found="True">когда</field>
+    <field name="В03" found="True">1</field>
+    <field name="В04" found="True">закупорить</field>
+    <field name="В05" found="True">технического</field>
+    <field name="В06" found="True">очень</field>
+    <field name="В07" found="True">соусы</field>
+    <field name="В08" found="True">71948</field>
+    <field name="В09" found="True">24</field>
+    <field name="В10" found="True">35</field>
+    <field name="В11" found="True">14</field>
+    <field name="В12" found="True">45</field>
+    <field name="В13" found="True">иеповлоримая</field>
+    <field name="В14" found="True">чтобызатем</field>
+    <field name="В15" found="True">34</field>
+    <field name="В16" found="True">14</field>
+    <field name="В17" found="True">13</field>
+    <field name="В18" found="True">12</field>
+    <field name="В19" found="True">35</field>
+    <field name="В20" found="True">14</field>
+    <field name="В21" found="True">12</field>
+    <field name="В22" found="True">135</field>
+    <field name="В23" found="True">14</field>
+    <field name="В24" found="True">пунктуальныа</field>
+    <field name="Замена_задание_В01" found="True">
+    </field>
+    <field name="Замена_ответ_В01" found="True">
+    </field>
+    <field name="Замена_задание_В02" found="True">
+    </field>
+    <field name="Замена_ответ_В02" found="True">
+    </field>
+    <field name="Замена_задание_В03" found="True">
+    </field>
+    <field name="Замена_ответ_В03" found="True">
+    </field>
+    <field name="Замена_задание_В04" found="True">
+    </field>
+    <field name="Замена_ответ_В04" found="True">
+    </field>
+    <field name="Замена_задание_В05" found="True">
+    </field>
+    <field name="Замена_ответ_В05" found="True">
+    </field>
+    <field name="Замена_задание_В06" found="True">
+    </field>
+    <field name="Замена_ответ_В06" found="True">
+    </field>
+  </page>
+  <page guid="216fc2a8-2bb6-40ad-9958-06e59e873112" number="2" template="(№1) Русский язык_чб">
+    <field name="В01" found="True">25</field>
+    <field name="В02" found="True">з</field>
+    <field name="В03" found="True">3</field>
+    <field name="В04" found="True">занял</field>
+    <field name="В05" found="True">псполнчтепьное</field>
+    <field name="В06" found="True">правильное</field>
+    <field name="В07" found="True">сапог</field>
+    <field name="В08" found="True">35679</field>
+    <field name="В09" found="True">35</field>
+    <field name="В10" found="True">13</field>
+    <field name="В11" found="True">34</field>
+    <field name="В12" found="True">12</field>
+    <field name="В13" found="True">неповторчтая</field>
+    <field name="В14" found="True">сначалазатем</field>
+    <field name="В15" found="True">134</field>
+    <field name="В16" found="True">13</field>
+    <field name="В17" found="True">124</field>
+    <field name="В18" found="True">234</field>
+    <field name="В19" found="True">15</field>
+    <field name="В20" found="True">24</field>
+    <field name="В21" found="True">236</field>
+    <field name="В22" found="True">135</field>
+    <field name="В23" found="True">13</field>
+    <field name="В24" found="True">пунктуальные</field>
+    <field name="Замена_задание_В01" found="True">02</field>
+    <field name="Замена_ответ_В01" found="True">сначала</field>
+    <field name="Замена_задание_В02" found="True">
+    </field>
+    <field name="Замена_ответ_В02" found="True">
+    </field>
+    <field name="Замена_задание_В03" found="True">
+    </field>
+    <field name="Замена_ответ_В03" found="True">
+    </field>
+    <field name="Замена_задание_В04" found="True">
+    </field>
+    <field name="Замена_ответ_В04" found="True">
+    </field>
+    <field name="Замена_задание_В05" found="True">
+    </field>
+    <field name="Замена_ответ_В05" found="True">
+    </field>
+    <field name="Замена_задание_В06" found="True">
+    </field>
+    <field name="Замена_ответ_В06" found="True">
+    </field>
+  </page>
+  <page guid="409d722e-3d26-4fb0-8b85-5f235eb38f98" number="3" template="(№1) Русский язык_чб">
+    <field name="В01" found="True">25</field>
+    <field name="В02" found="True">но</field>
+    <field name="В03" found="True">1</field>
+    <field name="В04" found="True">прозорлива</field>
+    <field name="В05" found="True">технического</field>
+    <field name="В06" found="True">первая</field>
+    <field name="В07" found="True">соусы</field>
+    <field name="В08" found="True">46593</field>
+    <field name="В09" found="True">24</field>
+    <field name="В10" found="True">135</field>
+    <field name="В11" found="True">35</field>
+    <field name="В12" found="True">123</field>
+    <field name="В13" found="True">неоднозначность</field>
+    <field name="В14" found="True">навстречувдали</field>
+    <field name="В15" found="True">34</field>
+    <field name="В16" found="True">12</field>
+    <field name="В17" found="True">123</field>
+    <field name="В18" found="True">12</field>
+    <field name="В19" found="True">14</field>
+    <field name="В20" found="True">1234</field>
+    <field name="В21" found="True">58</field>
+    <field name="В22" found="True">35</field>
+    <field name="В23" found="True">25</field>
+    <field name="В24" found="True">дорогупути</field>
+    <field name="Замена_задание_В01" found="True">04</field>
+    <field name="Замена_ответ_В01" found="True">иаврала</field>
+    <field name="Замена_задание_В02" found="True">
+    </field>
+    <field name="Замена_ответ_В02" found="True">
+    </field>
+    <field name="Замена_задание_В03" found="True">
+    </field>
+    <field name="Замена_ответ_В03" found="True">
+    </field>
+    <field name="Замена_задание_В04" found="True">
+    </field>
+    <field name="Замена_ответ_В04" found="True">
+    </field>
+    <field name="Замена_задание_В05" found="True">
+    </field>
+    <field name="Замена_ответ_В05" found="True">
+    </field>
+    <field name="Замена_задание_В06" found="True">
+    </field>
+    <field name="Замена_ответ_В06" found="True">
+    </field>
+  </page>
+</batch>
