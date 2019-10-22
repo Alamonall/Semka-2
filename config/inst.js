@@ -51,7 +51,10 @@ let inst = {
    
     let answer_count = 0,arr = [], done;
     
-    batches = xmlBuilder.create('projects');
+    let batches = xmlBuilder.create('projects',
+      {version: '1.0', encoding: 'UTF-8', standalone: true},
+      {pubID: null, sysID: null});
+    //let batches = xml_root.ele('projects');
     try{
       for(let item of list){
       console.log('xml path: '+ item + '.XML');   
@@ -75,13 +78,16 @@ let inst = {
                   imageCrop(item,res,i);
                   
                   //создаём элемент в xml 
-                  batches.ele('answer', {
-                    'id' : answer_count++,
-                    'value' : res.batch.page[0].block[i]._,
-                    'ref' : path.join('..','projects/images/', res.batch.page[0].block[3]._, '/') + res.batch.page[0].block[3]._ + '_' +
-                    path.parse(item).name + '_' + res.batch.page[0].block[i].ATTR.blockName + '.png',
-                    'subject': res.batch.page[0].block[3]._
-                  });
+                  arr.push(
+                    {
+                      'id' : answer_count++,
+                      'value' : res.batch.page[0].block[i]._,
+                      'ref' : path.join('..','projects/images/', res.batch.page[0].block[3]._, '/') + res.batch.page[0].block[3]._ + '_' +
+                      path.parse(item).name + '_' + res.batch.page[0].block[i].ATTR.blockName + '.png',
+                      'subject_code': res.batch.page[0].block[3]._,
+                      'check' : false
+                    }
+                  );
               }
           }
           else{
@@ -90,7 +96,7 @@ let inst = {
         });
       }
       batches.end({ pretty: true, allowEmpty: true});
-      indexing(batches);
+      indexing(arr);
       fs.writeFile('xml-out.xml',batches,(err,data)=>{
         if(err)
           console.log(err);
@@ -107,8 +113,17 @@ let inst = {
 
 
 function indexing(answers){
-
-
+  let indexes_xml = xmlBuilder.create('indexes');
+  let subject_codes = [];  
+  console.log('answer vala: ' + answers.length);
+  console.log('answer vala: ' + answers[1].value);
+  for(let i = 0; i< answers.length; i++){
+    subject_codes.push(answers[i].value,{'answer': answers[i]});
+    console.log('subject_codes[i].value : '+ JSON.stringify(subject_codes[i]).answer );
+    console.log('subject_codes[i].answer[i].value: ' + JSON.stringify(subject_codes[i].answer[i].value));
+  }
+  console.log('sub codes: ' + subject_codes.length);
+  console.log('length sub: ' +  subject_codes[i]);
 }
 
 //резка изображений
