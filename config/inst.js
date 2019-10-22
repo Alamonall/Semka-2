@@ -111,19 +111,55 @@ let inst = {
   
 }
 
+function recourse(rArry, rCount, rValue){
+  let subject_codes = [], temp_array = rArry;
+  
+}
 
 function indexing(answers){
   let indexes_xml = xmlBuilder.create('indexes');
-  let subject_codes = [];  
+  let subject_codes = [], temp_array = answers;
   console.log('answer vala: ' + answers.length);
   console.log('answer vala: ' + answers[1].value);
-  for(let i = 0; i< answers.length; i++){
-    subject_codes.push(answers[i].value,{'answer': answers[i]});
-    console.log('subject_codes[i].value : '+ JSON.stringify(subject_codes[i]).answer );
-    console.log('subject_codes[i].answer[i].value: ' + JSON.stringify(subject_codes[i].answer[i].value));
+
+  for(let i = 0; i < temp_array.length; i++){
+    let gVal = temp_array[i].value, count = 0, j = 0;
+    temp_array.slice( i, i+1);
+
+    while(!(j == temp_array.length)){
+      if(gVal == temp_array[j].value){
+        count++;
+        temp_array.slice( j, j+1);
+      }
+      else{
+        j++;
+      }
+    }
+    subject_codes.push({'value': gVal, 'count': count});
   }
-  console.log('sub codes: ' + subject_codes.length);
-  console.log('length sub: ' +  subject_codes[i]);
+  console.log('DONEDONEDONE: ' + JSON.stringify(subject_codes));
+
+  /*for(let i = 0; i< answers.length; i++){
+    subject_codes.push(
+      {'sub_code' : answers[i].value, 'answers' : answers[i]}
+    );
+  }
+  console.log('example:' + JSON.stringify(subject_codes[0].sub_code));
+  console.log('example:' + JSON.stringify(subject_codes[0].answers.id));*/
+
+  /*
+  let schedule = `{
+  "meetups": [
+    {"title":"Conference","date":"2017-11-30T12:00:00.000Z"},
+    {"title":"Birthday","date":"2017-04-18T12:00:00.000Z"}
+  ]
+}`;
+
+  schedule = JSON.parse(schedule, function(key, value) {
+    if (key == 'date') return new Date(value);
+    return value;
+  });
+*/
 }
 
 //резка изображений
