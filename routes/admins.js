@@ -26,16 +26,14 @@ router.get('/settings', function(req, res, next) {
 
 router.post('/settings',(req,res)=>{
   //при запуске запустить прогрессбар для резки проекта
-  //let form = document.forms[0];
-  //let ageElems = form.elements.age;
-  let arr = inst.getFiles(path.join(__dirname, '..', 'projects', req.body['projects'],'batches', '00000000')); //запуск резки
-  res.send(arr);
-  //res.send('Произошел админский троллинг: ' +  path.join(__dirname, '..', 'projects', req.body['projects'], 'batches','0000000'));
+  //указываем абсолютный путь к проекту и папкам с изображениями
+  let arr = inst.getFiles(req.body['projects']); //запуск резки
+  res.send('DONE' + arr)  //res.send('Произошел админский троллинг: ' +  path.join(__dirname, '..', 'projects', req.body['projects'], 'batches','0000000'));
 })
 
 //временное решение
 let temp_rows = ({name: '2'});
-router.get('/verifycontrol', function(req, res, next) {
+router.get('/verifycontrol', function(req, res) {
   //временное решение
   res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
   dbs: temp_rows});
