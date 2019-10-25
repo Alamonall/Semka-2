@@ -7,17 +7,25 @@ block content
         h3= title
         div(class='container-fluid')
             div(class='form-group row')
-                    label(class="col-sm-3 col-form-label") База данных:
+                    label(class="col-sm-3 col-form-label") Проекты:
                     div(class='col-sm-6')
                         select(name='database' class="form-control")
-                            each db in dbs
-                                option(value="")= db.name
+                            each project in projects
+                                option(value="")= project.name
+                            else
+                                option(value="") null
+            div(class='form-group row')
+                    label(class="col-sm-3 col-form-label") Предмет:
+                    div(class='col-sm-6')
+                        select(name='database' class="form-control")
+                            each subject in subjects
+                                option(value="")= subject
                             else
                                 option(value="") null
             table(class='table table-bordered')
                 tbody
                 tr
-                td Test0 
+                td(href='')
                 td Test1
                 td Test1
                 td Test1

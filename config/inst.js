@@ -23,7 +23,7 @@ let inst = {
     let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000'),
       paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_count = 0,answers_list = [], done;
     for (let item of paths_to_the_aud) {
-      console.log('path: ' + item);
+      //console.log('path: ' + item);
       let files = fs.readdirSync(dir + '\\' + item);
       //console.log('name', files);
       for(let file of files)
@@ -31,20 +31,20 @@ let inst = {
         if(file.match(/AB/)){
             //console.log('name: ' + file);
             if(path.extname(file).match(/XML/)){
-              console.log('exte: ' + path.extname(file));  
+              /*console.log('exte: ' + path.extname(file));  
               console.log('filename: ' + path.parse(file).name);  
               console.log('dir: ' + dir);
-              console.log('dir_path: ' + path.join(dir, item, path.parse(file).name));
+              console.log('dir_path: ' + path.join(dir, item, path.parse(file).name));*/
               aud_list.push(path.join(dir, item, path.parse(file).name));
           }
         }    
       }
     }  
     //создание xml-ки
-    let batches = xmlBuilder.create('projects');
+    let batches = xmlBuilder.create('projects', {'project_name': project_name});
     try{
       for(let item of aud_list){
-      console.log('xml path: '+ item + '.XML');   
+      //console.log('xml path: '+ item + '.XML');   
       //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
       let xml_string = readFileSync_encoding(item + '.XML', 'UTF-16');//.replace(/\?\?/,'');
       parser.parseString(xml_string,
@@ -56,18 +56,14 @@ let inst = {
                 !(res.batch.page[0].block[i].ATTR.blockName.match(/В\d\d/) === 'null' 
                 || res.batch.page[0].block[i].ATTR.blockName.match(/В\d\d/) === null )){
                   //проверка на существование папки с  ответом
-                  console.log('Cheking dir: ' + path.join(__dirname, '..', 'memory/', project_name, '/images/', res.batch.page[0].block[3]._, '/'));
-                  if(!fs.exists(path.join(__dirname, '..', 'memory/', project_name, '/'/*, 'images/', res.batch.page[0].block[3]._, '/'*/),(err,data)=>{
+                  //console.log('Cheking dir: ' + path.join(__dirname, '../memory/', project_name, '/images/', res.batch.page[0].block[3]._, '/'));
+                  /*if(!fs.exists(path.join('../memory/', project_name, '/images/', res.batch.page[0].block[3]._, '/'),err=>{
                     if(err) console.error(err);
-                    else return data;
-                  })){
-                    fs.mkdir(path.join(__dirname, '..', 'memory/', project_name, '/images/', res.batch.page[0].block[3]._,'/'),(err,data)=>{
+                  })){*/
+                    fs.mkdir(path.join(__dirname, '../memory/', project_name, '/images/', res.batch.page[0].block[3]._,'/'), {recursive: true},err=>{
                       if(err) console.error(err);
-                      else return data;
                     });
-                    //if(!fs.existsSync(path.join(__dirname, '..', 'projects/iamges/', res.batch.page[0].block[3]._, res.batch.page[0].block[i]._)))
-                      //fs.mkdirSync(path.join(__dirname, '..', 'projects/images/', res.batch.page[0].block[3]._, res.batch.page[0].block[i]._));
-                  }
+                  //}
                   //режем и сохраняем вырезанные изображения
                   imageCrop( item, res, i, project_name);
                   
@@ -76,7 +72,8 @@ let inst = {
                     {
                       'id' : answers_count++,
                       'value' : res.batch.page[0].block[i]._,
-                      'ref' : path.join(__dirname, '..','/memory/',project_name, '/images/', res.batch.page[0].block[3]._, '/') + res.batch.page[0].block[3]._ + '_' +
+                      //Путь должен быть относительным
+                      'ref' : path.join( '/memory/',project_name, '/images/', res.batch.page[0].block[3]._, '/') + res.batch.page[0].block[3]._ + '_' +
                       path.parse(item).name + '_' + res.batch.page[0].block[i].ATTR.blockName + '.png',
                       '_image_source': item + '.XML',
                       '_subject_code': res.batch.page[0].block[3]._,
@@ -91,26 +88,29 @@ let inst = {
           }
         });
       }      
+      //сортировка
       answers_list.sort(function(a, b){
         if (a.value < b.value) //сортируем строки по возрастанию
           return -1
         if (a.value > b.value)
           return 1
         return 0 // Никакой сортировки
-        })
-      for(let i = 0; i < arr.length; i++){
+      })
+
+      //создание структуры xml  
+      for(let i = 0; i < answers_list.length; i++){
         batches.ele('answer',{
-          'id' : answer_count++,
-          'value' : res.batch.page[0].block[i]._,
-          'ref' : path.join(__dirname, '..','memory/',project_name, '/images/', res.batch.page[0].block[3]._, '/') + res.batch.page[0].block[3]._ + '_' +
-          path.parse(item).name + '_' + res.batch.page[0].block[i].ATTR.blockName + '.png',
-          '_image_source': item + '.XML',
-          '_subject_code': res.batch.page[0].block[3]._,
-          'check' : false,
-          '_project': project_name})          
+          'id' : answers_list[i].id,
+          'value' : answers_list[i].value,
+          'ref' : answers_list[i].ref,
+          '_image_source': answers_list[i]._image_source,
+          '_subject_code': answers_list[i]._subject_code,
+          'check' : answers_list[i].check,
+          '_project': answers_list[i]._project})          
       }
       batches.end({ pretty: true, allowEmpty: true});
-      fs.writeFile('/memory/' + project_name + '/index.xml', batches, (err,data)=>{
+      
+      fs.writeFile(path.join(__dirname, '../memory/', project_name) + '/index.xml', batches, (err,data)=>{
         if(err)
           console.log(err);
         else
@@ -118,9 +118,9 @@ let inst = {
       });
 
     } catch(err){
-      console.error(err);
+        console.error(err);
     }
-    return done; //вернуть ссылку на список ответов для проекта   
+    return true; //вернуть ссылку на список ответов для проекта   
   }
 }
 
@@ -133,7 +133,7 @@ function imageCrop(item, res, i, project_name){
       /*width*/'width' : 1071,//parseInt(res.batch.page[0].block[i].ATTR.r - res.batch.page[0].block[i].ATTR.l),
       /*height*/'height': 92,//parseInt(res.batch.page[0].block[i].ATTR.b - res.batch.page[0].block[i].ATTR.t)
     })
-    .toFile(path.join(__dirname,'..','memory/', project_name, '/images/', res.batch.page[0].block[3]._, '/') + res.batch.page[0].block[3]._ 
+    .toFile(path.join(__dirname, '../memory/', project_name, '/images/', res.batch.page[0].block[3]._, '/') + res.batch.page[0].block[3]._ 
     + '_' + path.parse(item).name + '_' + res.batch.page[0].block[i].ATTR.blockName + '.png', (err)=>{
         if(err){
           imageCrop(item,res,i,project_name);
