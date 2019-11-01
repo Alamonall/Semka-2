@@ -75,7 +75,7 @@ let inst = {
                       //Путь должен быть относительным
                       'ref' : path.join( '/memory/',project_name, '/images/', res.batch.page[0].block[3]._, '/') + res.batch.page[0].block[3]._ + '_' +
                       path.parse(item).name + '_' + res.batch.page[0].block[i].ATTR.blockName + '.png',
-                      '_image_source': item + '.XML',
+                      '_image_source': item + '.TIF',
                       '_subject_code': res.batch.page[0].block[3]._,
                       'check' : false,
                       '_project': project_name

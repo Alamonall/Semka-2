@@ -6,18 +6,19 @@ block content
         +admin-list
         h3= title
         div(class='container-fluid')
+         form(name='projects' method='POST')
             div(class='form-group row')
                     label(class="col-sm-3 col-form-label") Проекты:
                     div(class='col-sm-6')
-                        select(name='database' class="form-control")
+                        select(name='database_list' onChange='this.form.submit();' class="form-control")
                             each project in projects
-                                option(value="")= project.name
+                                option(value="")= project
                             else
                                 option(value="") null
             div(class='form-group row')
                     label(class="col-sm-3 col-form-label") Предмет:
                     div(class='col-sm-6')
-                        select(name='database' class="form-control")
+                        select(name='subject_list' class="form-control")
                             each subject in subjects
                                 option(value="")= subject
                             else
@@ -32,3 +33,10 @@ block content
                 td Test1
                 td Test1
             button(type="submit" class='btn btn-primary') Проверить
+        script.
+            let formData = new FormData(document);
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', '/admin/verifycontrol/get/subjects');
+            xhr.send(formData);
+            xhr.onload = () => alert(xhr.response); 
+        
