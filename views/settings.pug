@@ -13,9 +13,12 @@ block content
                         each pr in prs
                             option(name="each_pr")= pr
                         else
-                            option(name="each_null") null
+                            option(name="each_null") null               
                 div(class='input-group-append')
                     button(type='submit' class="btn btn-primary") Резать    
+            div(class="progress")
+                    div(class="progress-bar" role="progressbar" style="width: 25%;"
+                        aria-valuenow="25" aria-valuemin="0" aria-valuemax="100") 25%             
             div(class='input-group' )
                 label(class="col-sm-3 col-form-label") Пул изображений:
                 input(name='image_pool' type="number" class="form-control" 

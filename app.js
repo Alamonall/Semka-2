@@ -22,6 +22,7 @@ let session = require('express-session');
 let Store = require('express-session').Store //??
 let BetterMemoryStore = require(__dirname + '/memory')
 let store = new BetterMemoryStore({expires: 60*60*1000, debug: true});
+
 app.use(session({
   name: 'hrsession',
   secret: 'hrsecret',
@@ -29,7 +30,6 @@ app.use(session({
   resave: true,
   saveUninitialized: true
 }));
-
 
 app.use(logger('dev'));
 app.use(bodyParser.json());

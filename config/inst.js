@@ -8,6 +8,11 @@ let parser = new xml2js.Parser({ attrkey: "ATTR" });
 
 //получение папок проектов для резки изображений
 let inst = {
+
+  testFunc: function(data){
+    return data + 'done';
+  },
+
   dirTree: function (dir) {
     let project_list = [], list = fs.readdirSync(dir);
     for (let item of list) {
@@ -22,6 +27,7 @@ let inst = {
   getFiles: function (project_name) {
     let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000'),
       paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_count = 0,answers_list = [], done;
+
     for (let item of paths_to_the_aud) {
       //console.log('path: ' + item);
       let files = fs.readdirSync(dir + '\\' + item);
@@ -39,7 +45,8 @@ let inst = {
           }
         }    
       }
-    }  
+    }
+
     //создание xml-ки
     let batches = xmlBuilder.create('projects', {'project_name': project_name});
     try{
@@ -75,7 +82,7 @@ let inst = {
                       //Путь должен быть относительным
                       'ref' : path.join( '/memory/',project_name, '/images/', res.batch.page[0].block[3]._, '/') + res.batch.page[0].block[3]._ + '_' +
                       path.parse(item).name + '_' + res.batch.page[0].block[i].ATTR.blockName + '.png',
-                      '_image_source': item + '.TIF',
+                      '_image_source': item + '.TIF', 
                       '_subject_code': res.batch.page[0].block[3]._,
                       'check' : false,
                       '_project': project_name
@@ -87,7 +94,8 @@ let inst = {
             console.error(err);
           }
         });
-      }      
+      }
+
       //сортировка
       answers_list.sort(function(a, b){
         if (a.value < b.value) //сортируем строки по возрастанию
@@ -112,15 +120,25 @@ let inst = {
       
       fs.writeFile(path.join(__dirname, '../memory/', project_name) + '/index.xml', batches, (err,data)=>{
         if(err)
-          console.log(err);
-        else
-          console.log('created!');
+          console.error(err);
+        else{ 
+            console.log('created!');
+          }
       });
 
     } catch(err){
-        console.error(err);
+        console.error('catch-'+err);
     }
-    return true; //вернуть ссылку на список ответов для проекта   
+    return project_name; //вернуть ссылку на список ответов для проекта   
+  },
+  
+  search: function (nameKey, myArray){
+    for (var i=0; i < myArray.length; i++) {
+        if (myArray[i].pr_name === nameKey) {
+            return true;
+        }
+      }
+    return false;
   }
 }
 
