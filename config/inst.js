@@ -23,7 +23,7 @@ let inst = {
   getFiles: function (project_name) {
     try{
     let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000'),
-        paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_count = 0, answers_list = [];
+        paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_list = [];
 
     for (let item of paths_to_the_aud) {
       //выборка необходимых файлов с данными ддя резки и ответов
@@ -64,15 +64,14 @@ let inst = {
                 //console.log('i2 = ' + data.batch.page[0].block[i].ATTR.blockName.match(/В\d\d/)); //ответ ученика
                 //проверка на существование папки с  ответом
                 fs.mkdir(path.join(__dirname, '../memory/', project_name, '/images/', data.batch.page[0].block[3]._,'/'), 
-                      {recursive: true}, err => {
+                      { recursive: true}, err => {
                   if(!err) {
                       //режем и сохраняем вырезанные изображения
                       imageCrop(item, data, i, project_name);
 
                       //создаём элемент для записи в xml 
-                      answers_list.push(
+                      /*answers_list.push(
                         {
-                          'id' : answers_count++,
                           'value' : data.batch.page[0].block[i]._,
                           //Путь должен быть относительным
                           'ref' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
@@ -82,12 +81,31 @@ let inst = {
                           'check' : false,
                           '_project': project_name
                         }
-                      );  
-                      //console.log('answers list : '  +  JSON.stringify(answers_list[i]));
-                      fs.writeFile(path.join(__dirname, '../memory/', project_name) + '/index.json', JSON.stringify(answers_list[i]), (err) => {
-                        if(err)
-                          console.error('line 89: ' + err);
-                      });                 
+                      );  */
+
+                      let aswer =  {
+                        'value' : data.batch.page[0].block[i]._,
+                        //Путь должен быть относительным
+                        'ref' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
+                        path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png',
+                        '_image_source': item + '.TIF', 
+                        '_subject_code': data.batch.page[0].block[3]._,
+                        'check' : false,
+                        '_project': project_name
+                      };
+                      //console.log('answers list : '  +  JSON.stringify(JSON.stringify(aswer)));
+                      fs.exists(path.join(__dirname, '../memory/', project_name) + '/index.json', (exists)=>{
+                        if(exists){
+                          fs.appendFileSync(path.join(__dirname, '../memory/', project_name) + '/index.json', JSON.stringify(aswer));
+                        } else {
+                          fs.writeFile(path.join(__dirname, '../memory/', project_name) + '/index.json', JSON.stringify(aswer), (err) => {
+                            if(err)
+                              console.error('line 89: ' + err);
+                          });
+                        }
+
+                      })
+                                       
                     }
                   });              
               }
