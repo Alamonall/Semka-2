@@ -36,16 +36,17 @@ router.post('/settings',(req,res)=>{
       console.log('exists: ' + exists);
       //ошибка
       console.log('Errr: ' + path.join(__dirname,'..', 'memory/') + 'list_of_projects.json');
-       fs.readFile(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json', ( err, file) =>{
+       fs.readFile(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json', (err,file) =>{
         if(!err){         
           console.log('data: ' + file); 
           let data = JSON.parse(file);
           if(!inst.search(pr_name, data))
-          {
-            console.log('inst.search(pr_name, data)');             
-            data.push({'pr_name': pr_name});
-            fs.writeFileSync(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json', JSON.stringify(data));
-          }
+            {
+              console.log('inst.search(pr_name, data)');
+             
+              data.push({'pr_name': pr_name});
+              fs.writeFileSync(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json', JSON.stringify(data));
+            }
           //fs.appendFileSync(path.join(__dirname,'..', 'memory/list_of_projects') + '.json', JSON.stringify({'pr_name': pr_name}));
         
         }
