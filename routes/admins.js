@@ -9,7 +9,6 @@ const connectionString =
 'Driver=SQL Server Native Client 11.0;DSN=SQLNative DSN;SERVER=erbd38;Database=erbd_ege_reg_19_38;Trusted_Connection=yes;';
 const get_dbs_query = 'select dtb.name from master.sys.databases as dtb where dtb.name like \'%erbd%\''
 const get_users_query = 'SELECT UserName ,UserFIO FROM [TRDB1].[dbo].[useUsers]'
-let project_list = []; //список обработанных проектов
 
 router.get('/admin', (req, res, next)=>{
     res.render('admin', { title: 'Здесь вы можете проверить верификацию' });
@@ -28,16 +27,17 @@ router.post('/settings',(req,res)=>{
   //указываем абсолютный путь к проекту и папкам с изображениями    
 
   //резка изображений
-  let pr_name = inst.getFiles(req.body['projects']);
-  
-  console.log('pr_name: ' + pr_name);
-  fs.exists(path.join(__dirname,'..','/memory/') + 'list_of_projects.json', (exists)=>{
-    if(exists){
-      console.log('exists: ' + exists);
-      //ошибка
-      console.log('Errr: ' + path.join(__dirname,'..', 'memory/') + 'list_of_projects.json');
-       fs.readFile(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json', ( err, file) =>{
-        if(!err){         
+  inst.getFiles(req.body['projects'], (pr_name)=>{
+
+    console.log('pr_name: ' + pr_name);
+      fs.readFile(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json', ( err, file) =>{
+      if(!err){
+        if(file == ''){
+          fs.writeFile(path.join(__dirname, '..', 'memory/') + 'list_of_projects.json', JSON.stringify([{'pr_name': pr_name}]),(err)=>{
+            if(err)
+              throw err;
+          });
+        } else {
           console.log('data: ' + file); 
           let data = JSON.parse(file);
           if(!inst.search(pr_name, data))
@@ -45,20 +45,22 @@ router.post('/settings',(req,res)=>{
             console.log('inst.search(pr_name, data)');             
             data.push({'pr_name': pr_name});
             fs.writeFileSync(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json', JSON.stringify(data));
-          }
-          //fs.appendFileSync(path.join(__dirname,'..', 'memory/list_of_projects') + '.json', JSON.stringify({'pr_name': pr_name}));
-        
+          } 
         }
-      });
       } 
-    else{
-      console.log('writeFileSync');
-      fs.writeFileSync(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json',JSON.stringify([{'pr_name': pr_name}]));
-    }
+      else {
+        console.log('writeFileSync');
+        fs.writeFile(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json',JSON.stringify([{'pr_name': pr_name}]),(err)=>{
+          if(err)
+            throw err;
+        }); 
+      }
+    }); 
+    //var test = inst.testFunc('testFunc');
+    //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
+    res.redirect('/admin/settings');
   });
-  //var test = inst.testFunc('testFunc');
-  //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
-  //res.redirect('/admin/settings');
+  
 
 });
 

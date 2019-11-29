@@ -21,10 +21,10 @@ let inst = {
   //projects/dir/batches/00000000/
 
   getFiles: function (project_name) {
-    try{
+   
     let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000'),
-        paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_list = [];
-
+            paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_list = [];
+    fs.mkdirSync(path.join(__dirname, '../memory/', project_name), { recursive: true});
     for (let item of paths_to_the_aud) {
       //выборка необходимых файлов с данными ддя резки и ответов
       let files = fs.readdirSync(dir + '\\' + item);
@@ -45,94 +45,107 @@ let inst = {
     }
 
   
-
-  for(let item of aud_list){
-    //console.log('xml path: '+ item + '.XML');   
-    //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
-    let xml_string = readFileSync_encoding(item + '.XML', 'UTF-16');//.replace(/\?\?/,'');
-    
-    //вытаскиваем из файлов необходимые данные
-    parser.parseString(xml_string,
-      (err, data) => {
-        if(!err){    
-          for(let i = 0; i < 75; i++){ // число 75 взято от болды, лучше будет заменить 
-
-            if(data.batch.page[0].block[i]._ &&
-              !(data.batch.page[0].block[i].ATTR.blockName.match(/В\d\d/) === 'null' || 
-              data.batch.page[0].block[i].ATTR.blockName.match(/В\d\d/) === null )){
-                //console.log('i1 = ' + data.batch.page[0].block[i]._); //номер задания
-                //console.log('i2 = ' + data.batch.page[0].block[i].ATTR.blockName.match(/В\d\d/)); //ответ ученика
-                //проверка на существование папки с  ответом
-                fs.mkdir(path.join(__dirname, '../memory/', project_name, '/images/', data.batch.page[0].block[3]._,'/'), 
-                      { recursive: true}, err => {
-                  if(!err) {
-                      //режем и сохраняем вырезанные изображения
-                      imageCrop(item, data, i, project_name);
-
-                      //создаём элемент для записи в xml 
-                      /*answers_list.push(
-                        {
-                          'value' : data.batch.page[0].block[i]._,
-                          //Путь должен быть относительным
-                          'ref' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
-                          path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png',
-                          '_image_source': item + '.TIF', 
-                          '_subject_code': data.batch.page[0].block[3]._,
-                          'check' : false,
-                          '_project': project_name
-                        }
-                      );  */
-
-                      let aswer =  {
-                        'value' : data.batch.page[0].block[i]._,
-                        //Путь должен быть относительным
-                        'ref' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
-                        path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png',
-                        '_image_source': item + '.TIF', 
-                        '_subject_code': data.batch.page[0].block[3]._,
-                        'check' : false,
-                        '_project': project_name
-                      };
-                      //console.log('answers list : '  +  JSON.stringify(JSON.stringify(aswer)));
-                      fs.exists(path.join(__dirname, '../memory/', project_name) + '/index.json', (exists)=>{
-                        if(exists){
-                          fs.appendFileSync(path.join(__dirname, '../memory/', project_name) + '/index.json', JSON.stringify(aswer));
-                        } else {
-                          fs.writeFile(path.join(__dirname, '../memory/', project_name) + '/index.json', JSON.stringify(aswer), (err) => {
-                            if(err)
-                              console.error('line 89: ' + err);
-                          });
-                        }
-
-                      })
-                                       
-                    }
+    var myProm = new Promise((resolve)=>{
+    for(let item of aud_list){
+      //console.log('xml path: '+ item + '.XML');   
+      //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
+      let xml_string = readFileSync_encoding(item + '.XML', 'UTF-16');//.replace(/\?\?/,'');
+      
+      //вытаскиваем из файлов необходимые данные
+      parser.parseString(xml_string, (err, data) => {
+          if(!err){  
+              for(let i = 0; i < 75; i++){// число 75 взято от бaлды, лучше будет заменить 
+                let page = data.batch.page[0].block[i];
+                if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){
+                    //проверка на существование папки с  ответом
+                  fs.mkdir(path.join(__dirname, '../memory/', project_name, '/images/', data.batch.page[0].block[3]._,'/'), 
+                    { recursive: true}, err => {
+                      if(!err) {
+                        //режем и сохраняем вырезанные изображения
+                        imageCrop(item, data, i, project_name);
+                        //console.log('i = ' + i);
+                        //создаём элемент для записи в xml 
+                        answers_list.push(
+                          {
+                            'value' : data.batch.page[0].block[i]._,
+                            //Путь должен быть относительным
+                            'ref' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
+                            path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png',
+                            '_image_source': item + '.TIF', 
+                            '_subject_code': data.batch.page[0].block[3]._,
+                            'check' : false,
+                            '_project': project_name
+                          }
+                        ); 
+                      }
                   });              
-              }
-            }  
-           
+                }
+            }                  
           }
-        else{
-          console.error(err);
-        }
-      });
-    }    
-    return project_name; //вернуть ссылку на список ответов для проекта   
-  } catch (err){
-    throw err;  
-  }
+          else{
+            throw err;
+          }
+        });       
+      } 
+      console.log('Resolve: ' + answers_list.length);
+      resolve(answers_list);    
+      }).then( (result)=>{
+        console.log('result: ' + result.length);
+        fs.writeFile(path.join(__dirname, '../memory/', project_name) + '/list_of_answers.json', JSON.stringify(result), (err)=>{
+          if(!err) console.log(result.length);
+        })}).then(()=>{
+          return project_name;
+        })   
+        //вернуть ссылку на список ответов для проекта   
+
 },
   
-  search: function (nameKey, myArray){
-    for (var i=0; i < myArray.length; i++) {
-      if (myArray[i].pr_name === nameKey) {
+  search: function (nameKey, myarray){
+    for (var i=0; i < myarray.length; i++) {
+      if (myarray[i].pr_name === nameKey) {
           return true;
       }
     }
     return false;
   }
 }
- 
+
+function spectre(file, answers){
+  if(answers.length > 0)
+    fs.writeFile(file, answers, (err)=>{
+      if(err) throw err;
+    });
+}
+
+function writingsOfTheWall(file, answer){
+  fs.readFile(file, (err, data)=>{
+    if(!err){
+      console.log('writingsOfTheWall0');
+      if(data == ''){
+        console.log('writingsOfTheWall1: ' + JSON.stringify(answer) + '; ' + answer);
+        fs.writeFile(file, JSON.stringify(answer), (err) => {
+          if(err) throw err;
+        });
+      }
+      else{
+        console.log('writingsOfTheWall2: ' + JSON.stringify(answer) + '; ' + answer);
+        let uncodedData = JSON.stringify(data);
+        uncodedData.push(answer);
+        fs.writeFile(file, answer, (err) => {
+          if(err) throw err;
+        });
+      }
+    } 
+    else {
+      console.log('writingsOfTheWall3 - ' + JSON.stringify(answer) + '; error: ' + err);
+      fs.writeFile(file, JSON.stringify(answer), (err) => {
+        if(err) 
+          throw err;
+      });
+    }
+  });
+}
+
 function creatingXmlWithFiles(list, project){
     //создание xml-ки
     let batches = xmlBuilder.create('projects', {'project_name': project});
@@ -163,7 +176,7 @@ function creatingXmlWithFiles(list, project){
       batches.end({ pretty: true, allowEmpty: true});
       
       //запись ссылок на "обрезки" в xml      
-      fs.writeFile(path.join(__dirname, '../memory/', project) + '/index.xml', batches, (err)=>{
+      fs.writeFile(path.join(__dirname, '../memory/', project) + '/list_of_answers.json', batches, (err)=>{
         if(err)
           console.error('line 127: ' + err);        
       });         
