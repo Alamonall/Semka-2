@@ -10,7 +10,6 @@ const connectionString =
 const get_dbs_query = 'select dtb.name from master.sys.databases as dtb where dtb.name like \'%erbd%\''
 const get_users_query = 'SELECT UserName ,UserFIO FROM [TRDB1].[dbo].[useUsers]'
 let project_list = []; //список обработанных проектов
-var limst;
 
 router.get('/admin', (req, res, next)=>{
     res.render('admin', { title: 'Здесь вы можете проверить верификацию' });
@@ -27,59 +26,45 @@ router.get('/settings', (req, res, next)=>{
 router.post('/settings',(req,res)=>{
   //при запуске запустить прогрессбар для резки проекта
   //указываем абсолютный путь к проекту и папкам с изображениями    
-  /*if(fs.existsSync(path.join(__dirname,'../memory/') + 'data.json')){
-    console.log('is this array?: ' + JSON.parse(project_list).isArray());
-    project_list = fs.readFileSync(path.join(__dirname, '../memory/') + 'data.json');
-    console.log('proj_list: ' + project_list);
-    //console.log('file proj_list: ' + fs.readFileSync(path.join(__dirname, '../memory/') + 'data.json'));
-  }*/
 
-  //резка изображений, limst должна сериализоваться на сервере после выполнения getFiles 
-  let pr_name = inst.getFiles(req.body['projects'], (err,ans)=>{
-    if(err){
-      console.error(err); 
-    } 
-  });
-  //скорей всего всё это записывается в бд
+  //резка изображений
+  let pr_name = inst.getFiles(req.body['projects']);
+  
   console.log('pr_name: ' + pr_name);
-  fs.exists(path.join(__dirname,'..','memory/list_of_projects') + '.json', (exists)=>{
+  fs.exists(path.join(__dirname,'..','/memory/') + 'list_of_projects.json', (exists)=>{
     if(exists){
-      console.log('list of projects exists');
-      let file = fs.readFileSync(path.join(__dirname,'..', 'memory/list_of_projects') + '.json');
-      let data = JSON.parse(file);
-      if(!inst.search(pr_name, data))
-        {
-          data.push({'pr_name': pr_name});
-          fs.writeFileSync(path.join(__dirname,'..', 'memory/list_of_projects') + '.json', JSON.stringify(data));
+      console.log('exists: ' + exists);
+      //ошибка
+      console.log('Errr: ' + path.join(__dirname,'..', 'memory/') + 'list_of_projects.json');
+       fs.readFile(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json', (err,file) =>{
+        if(!err){         
+          console.log('data: ' + file); 
+          let data = JSON.parse(file);
+          if(!inst.search(pr_name, data))
+            {
+              console.log('inst.search(pr_name, data)');
+             
+              data.push({'pr_name': pr_name});
+              fs.writeFileSync(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json', JSON.stringify(data));
+            }
+          //fs.appendFileSync(path.join(__dirname,'..', 'memory/list_of_projects') + '.json', JSON.stringify({'pr_name': pr_name}));
+        
         }
-      //fs.appendFileSync(path.join(__dirname,'..', 'memory/list_of_projects') + '.json', JSON.stringify({'pr_name': pr_name}));
-    } 
+      });
+      } 
     else{
-      fs.writeFileSync(path.join(__dirname,'..', 'memory/list_of_projects') + '.json', JSON.stringify({'pr_name': pr_name}));
+      console.log('writeFileSync');
+      fs.writeFileSync(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json',JSON.stringify([{'pr_name': pr_name}]));
     }
   });
-  
-
-//  var test = inst.testFunc('testFunc');
-  //переадрессация должна работать на основе сессиии
-  res.redirect('/admin/settings');
+  //var test = inst.testFunc('testFunc');
+  //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
+  //res.redirect('/admin/settings');
 
 });
 
-
-/*fs.readFile('results.json', function (err, data) {
-    var json = JSON.parse(data)
-    json.push('search result: ' + currentSearchResult)
-
-    fs.writeFile("results.json", JSON.stringify(json))
-})*/
-
-//временное решение
-let temp_rows = ['test2','test22','test1'], temp = ['test1','test2','test3'];
-
 router.get('/verifycontrol', (req, res)=> {
-  console.log('get /verifyconytol by admin: ' + limst);
-  let pr = fs.readFileSync(path.join(__dirname, '..', '/memory/list_of_projects') + '.json');
+  let pr = fs.readFileSync(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json');
   let pr_names = JSON.parse(pr);
   console.log('pr_names: '+ pr_names.length);
   //limst должна вытаскиваться из файла
@@ -95,9 +80,15 @@ router.get('/verifycontrol', (req, res)=> {
   })  */
 });
 
-router.post('/verifycontrol',(res,req)=>{
-  console.log('post /verifyconytol by admin');
-  res.send({subjects: temp});
+router.post('/verifycontrol', (req,res)=>{
+  console.log('post /verifyconytol by admin - ' + req.body['name']);
+  let xml = fs.readFile(path.join(__dirname, '..', '/memory/', req.body['name']) + '/index.xml', (err,data)=>{
+    if(!err)
+      return data;
+  });
+  console.log('sonso: ' );
+
+  res.send('ASD');
 });
 
 //временное решение

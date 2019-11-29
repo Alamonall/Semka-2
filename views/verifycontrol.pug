@@ -6,28 +6,44 @@ block content
         +admin-list
         h3= title
         div(class='container-fluid')
-         form(name='projects' method='POST')
+         form(name='projects' )
             div(class='form-group row')
                     label(class="col-sm-3 col-form-label") Проекты:
                     div(class='col-sm-6')
-                        select(name='database_list' class="form-control")
+                        select(id='dblst' name='database_list' onChange='shit(this)' class="form-control")
                             each project in projects
-                                option(value="")= project.pr_name
+                                option(value=project.pr_name)= project.pr_name
                             else
-                                option(value="") null
+                                option(value='null') null
             div(class='form-group row')
                     label(class="col-sm-3 col-form-label") Предмет:
                     div(class='col-sm-6')
-                        select(name='subject_list' class="form-control")
+                        select(id='sbjlist' name='subject_list' onchange="get_data();" class="form-control")
                             each project in projects
-                                option(value="")= project.pr_name
+                                option(value=project.pr_name)= project.pr_name
                             else
-                                option(value="") null
+                                option(value='null') null
             table(class='table table-bordered')
                 tbody
                 tr
                 td Test1
             button(type="submit" class='btn btn-primary') Проверить
         script.
+            function shit(){    
+                var xhr = new XMLHttpRequest();
+                var body = 'type=prj' + '&name='+document.getElementById('dblst').value;
+                alert('alert: ' + body);
+                xhr.open('POST', '/admin/verifycontrol');
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.send(body);
+                xhr.onload = function () {
+                if (xhr.readyState === xhr.DONE) {
+                    if (xhr.status === 200) {
+                        console.log(xhr.response);
+                        console.log(xhr.responseText);
+                    }
+                }
+            };
+            }
             
         
