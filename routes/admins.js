@@ -10,16 +10,18 @@ const connectionString =
 const get_dbs_query = 'select dtb.name from master.sys.databases as dtb where dtb.name like \'%erbd%\''
 const get_users_query = 'SELECT UserName ,UserFIO FROM [TRDB1].[dbo].[useUsers]'
 
-router.get('/admin', (req, res, next)=>{
+router.get('/admin', (req, res)=>{
     res.render('admin', { title: 'Здесь вы можете проверить верификацию' });
   });
 
-router.get('/settings', (req, res, next)=>{ 
+router.get('/settings', (req, res)=>{ 
   process.stdout.write("\033c");
   process.stdout.write("\033c");   
   //выгружать индексированный список с проверкой, есть ли всё ещё проект в папке или был удалён/изменён/перезапущен
+  let prs = inst.dirTree('.\\projects');
+  console.log(prs);
   res.render('settings', { title: 'Здесь можно настроить всё',
-    prs: inst.dirTree('.\\projects')});  
+    prs: prs });  
 });
 
 router.post('/settings',(req,res)=>{
@@ -27,41 +29,10 @@ router.post('/settings',(req,res)=>{
   //указываем абсолютный путь к проекту и папкам с изображениями    
 
   //резка изображений
-  inst.getFiles(req.body['projects'], (pr_name)=>{
-
-    console.log('pr_name: ' + pr_name);
-      fs.readFile(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json', ( err, file) =>{
-      if(!err){
-        if(file == ''){
-          fs.writeFile(path.join(__dirname, '..', 'memory/') + 'list_of_projects.json', JSON.stringify([{'pr_name': pr_name}]),(err)=>{
-            if(err)
-              throw err;
-          });
-        } else {
-          console.log('data: ' + file); 
-          let data = JSON.parse(file);
-          if(!inst.search(pr_name, data))
-          {
-            console.log('inst.search(pr_name, data)');             
-            data.push({'pr_name': pr_name});
-            fs.writeFileSync(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json', JSON.stringify(data));
-          } 
-        }
-      } 
-      else {
-        console.log('writeFileSync');
-        fs.writeFile(path.join(__dirname,'..', 'memory/') + 'list_of_projects.json',JSON.stringify([{'pr_name': pr_name}]),(err)=>{
-          if(err)
-            throw err;
-        }); 
-      }
-    }); 
-    //var test = inst.testFunc('testFunc');
-    //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
-    res.redirect('/admin/settings');
-  });
-  
-
+  inst.getFiles(req.body['projects']);   
+  //var test = inst.testFunc('testFunc');
+  //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
+  res.redirect('/admin/settings');
 });
 
 router.get('/verifycontrol', (req, res)=> {

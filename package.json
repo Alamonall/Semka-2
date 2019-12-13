@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "hrstart": "node ./app",
-    "devstart": "nodemon -L ./bin/www"
+    "forest": "nodemon -L ./bin/www"
   },
   "dependencies": {
     "connect-flash": "^0.1.1",
