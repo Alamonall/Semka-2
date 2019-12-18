@@ -70,7 +70,22 @@ let inst = {
             let page = data.batch.page[0].block[i];
             if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){
               //проверка на существование папки предмета (например 1 - русский) с  ответом или её создание
-              answers_list.push({
+              //project-subject-value
+              //       -subject-value
+              //               -value
+              answers_list.push(
+                '_subject_code': data.batch.page[0].block[3]._ [
+                  {
+                  'value' : data.batch.page[0].block[i]._ [
+                    {
+                      '_cropped_image' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
+                      path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png',
+                      '_original_image_': item + '.TIF', 
+                      'check' : false,
+                    }]
+                  }]
+              )
+              /*answers_list.push({
                 'value' : data.batch.page[0].block[i]._,
                 //Путь должен быть относительным
                 '_cropped_image' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
@@ -79,7 +94,7 @@ let inst = {
                 '_subject_code': data.batch.page[0].block[3]._,
                 'check' : false,
                 '_project': project_name
-              })
+              })*/
               
               const varMkDir = mkdir(path.join(__dirname, '../memory/', project_name, '/images/', data.batch.page[0].block[3]._,'/'), {recursive: true });
                 varMkDir.then( imageCrop(item, data, i, project_name))
@@ -88,7 +103,8 @@ let inst = {
         })
       }
     fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/list_of_answers.json',JSON.stringify(answers_list));
-    } catch (err){
+    return project_name;
+  } catch (err){
       throw err;
     }
   },
@@ -100,6 +116,10 @@ let inst = {
       }
     }
     return false;
+  },
+
+  indexingNumbers: function(file){
+
   }
 }
 
@@ -179,7 +199,8 @@ function creatingXmlWithFiles(list, project){
 //резка изображений
 function imageCrop(item, data, i, project_name){
   console.log('with toFile:' + i);
-  readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/)
+  try{
+    readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
     .then((inf)=>
         sharp(inf)
           .extract(
@@ -189,10 +210,16 @@ function imageCrop(item, data, i, project_name){
           })
           .toFile(path.join(__dirname, '../memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
           + '_' + path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png')
-          .catch(imageCrop( item, data, i, project_name))
+          //.then(console.log)
+          //.catch(imageCrop(item, data, i, project_name))
     )
-    .catch((err)=>{console.log('err in imageCrop: ' + err)}))
-};
+    .catch((err)=>{
+      console.log('err in imageCrop[' + i + ']: '+ err);
+      imageCrop(item, data, i, project_name)
+    })
+}catch(er){
+  throw er;
+}};
 
 //функция для энкодинга 
 function readFileSync_encoding(filename,enc){

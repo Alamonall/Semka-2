@@ -10,17 +10,17 @@ block content
             div(class='form-group row')
                     label(class="col-sm-3 col-form-label") Проекты:
                     div(class='col-sm-6')
-                        select(id='dblst' name='database_list' onChange='shit(this)' class="form-control")
+                        select(id='prjlst' name='project_list' onChange='get_Subjects()' class="form-control")
                             each project in projects
-                                option(value=project.pr_name)= project.pr_name
+                                option(value=project)= project
                             else
                                 option(value='null') null
             div(class='form-group row')
                     label(class="col-sm-3 col-form-label") Предмет:
                     div(class='col-sm-6')
-                        select(id='sbjlist' name='subject_list' onchange="get_data();" class="form-control")
-                            each project in projects
-                                option(value=project.pr_name)= project.pr_name
+                        select(id='sbjlist' name='subject_list' onchange="get_Images();" class="form-control")
+                            each subject in subjects
+                                option(value=subject)= subject
                             else
                                 option(value='null') null
             table(class='table table-bordered')
@@ -29,21 +29,69 @@ block content
                 td Test1
             button(type="submit" class='btn btn-primary') Проверить
         script.
-            function shit(){    
+            function get_Images(){   
                 var xhr = new XMLHttpRequest();
-                var body = 'type=prj' + '&name='+document.getElementById('dblst').value;
-                alert('alert: ' + body);
+                var body = 'type=sbj' + '&name=' + document.getElementById('sbjlist').value;
+                //alert('alert: ' + body);
                 xhr.open('POST', '/admin/verifycontrol');
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                 xhr.send(body);
                 xhr.onload = function () {
-                if (xhr.readyState === xhr.DONE) {
-                    if (xhr.status === 200) {
-                        console.log(xhr.response);
-                        console.log(xhr.responseText);
+                    if (xhr.readyState === xhr.DONE) {
+                        switch(xhr.status){
+                            case 200: {
+                                console.log('xhr.responseText: ' + xhr.responseText);
+                                let sbjs_select = document.getElementById('sbjlist') 
+                                let arr = JSON.parse(xhr.responseText);
+                                for(let i = 0; i< arr.length;i++){
+                                    let option = document.createElement("option");
+                                        option.text = arr[i];
+                                        sbjs_select.add(option);
+                                }
+                                break;
+                            }
+                            case 500: {
+                                console.log('response 500: ' + xhr.responseText);
+                                let option = document.createElement("option");
+                                option.text = 'null';
+                                sbjs_select.add(option);
+                                break;
+                            }
+                        }
                     }
                 }
-            };
+            }
+            function get_Subjects(){   
+                var xhr = new XMLHttpRequest();
+                var body = 'type=prj' + '&name=' + document.getElementById('prjlst').value;
+                //alert('alert: ' + body);
+                xhr.open('POST', '/admin/verifycontrol');
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.send(body);
+                xhr.onload = function () {
+                    if (xhr.readyState === xhr.DONE) {
+                        switch(xhr.status){
+                            case 200: {
+                                console.log('xhr.responseText: ' + xhr.responseText);
+                                let sbjs_select = document.getElementById('sbjlist') 
+                                let arr = JSON.parse(xhr.responseText);
+                                for(let i = 0; i< arr.length;i++){
+                                    let option = document.createElement("option");
+                                        option.text = arr[i];
+                                        sbjs_select.add(option);
+                                }
+                                break;
+                                }
+                            case 500: {
+                                console.log('response 500: ' + xhr.responseText);
+                                let option = document.createElement("option");
+                                option.text = 'null';
+                                sbjs_select.add(option);
+                                break;
+                            }
+                        }
+                    }
+                }
             }
             
         

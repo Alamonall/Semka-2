@@ -18,31 +18,53 @@ router.get('/settings', (req, res)=>{
   process.stdout.write("\033c");
   process.stdout.write("\033c");   
   //выгружать индексированный список с проверкой, есть ли всё ещё проект в папке или был удалён/изменён/перезапущен
-  let prs = inst.dirTree('.\\projects');
-  console.log(prs);
+  inst.dirTree('.\\projects');
   res.render('settings', { title: 'Здесь можно настроить всё',
-    prs: prs });  
+    prs: inst.dirTree('.\\projects') });  
 });
 
 router.post('/settings',(req,res)=>{
   //при запуске запустить прогрессбар для резки проекта
   //указываем абсолютный путь к проекту и папкам с изображениями    
 
-  //резка изображений
-  inst.getFiles(req.body['projects']);   
+  try{
+    //резка изображений
+    const complete_project = inst.getFiles(req.body['projects']);   
+    console.log('list of = ' + complete_project);
+    fs.stat(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', (err)=>{
+      if(!err)
+      {
+        const file = fs.readFileSync(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json');
+        const data = JSON.parse(file);
+        data.push(complete_project);
+        fs.writeFileSync(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', JSON.stringify(data));
+      } else {
+        const temp_array =  [];
+        temp_array.push(complete_project);
+        fs.writeFileSync(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', JSON.stringify(temp_array));
+      }  
+    }); 
+  } catch(e){
+    throw e;
+  }
   //var test = inst.testFunc('testFunc');
   //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
   res.redirect('/admin/settings');
 });
 
 router.get('/verifycontrol', (req, res)=> {
-  let pr = fs.readFileSync(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json');
-  let pr_names = JSON.parse(pr);
-  console.log('pr_names: '+ pr_names.length);
-  //limst должна вытаскиваться из файла
-  res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
-    projects: pr_names
-  });    
+  fs.readFile(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', (err,data)=>{
+    if(!err){
+      let pr_names = JSON.parse(data);
+      console.log('pr_names: '+ pr_names.length);
+      //limst должна вытаскиваться из файла
+      res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
+        projects: pr_names, subjects: []
+      });    
+    } else 
+        throw err;
+  });
+
   /*sql.query(connectionString,get_dbs_query,(err,rows) =>{
    // console.log(rows);
     if(err) 
@@ -53,14 +75,8 @@ router.get('/verifycontrol', (req, res)=> {
 });
 
 router.post('/verifycontrol', (req,res)=>{
-  console.log('post /verifyconytol by admin - ' + req.body['name']);
-  let xml = fs.readFile(path.join(__dirname, '..', '/memory/', req.body['name']) + '/index.xml', (err,data)=>{
-    if(!err)
-      return data;
-  });
-  console.log('sonso: ' );
-
-  res.send('ASD');
+  console.log('post /verifyconytol by admin');
+  res.status(200).sendFile(path.join(__dirname, '..', '/memory/', + req.body['name'], '/list_of_answers.json'));
 });
 
 //временное решение
