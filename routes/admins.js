@@ -26,43 +26,43 @@ router.get('/settings', (req, res)=>{
 router.post('/settings',(req,res)=>{
   //при запуске запустить прогрессбар для резки проекта
   //указываем абсолютный путь к проекту и папкам с изображениями    
-
   try{
     //резка изображений
-    const complete_project = inst.getFiles(req.body['projects']);   
-    console.log('list of = ' + complete_project);
+    let complete_project = inst.getFiles(req.body['projects']);   
+    console.log('comp proj sub: '+ complete_project_subjects.length); 
     fs.stat(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', (err)=>{
       if(!err)
       {
         const file = fs.readFileSync(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json');
-        const data = JSON.parse(file);
-        data.push(complete_project);
+        const data = JSON.parse(file)
+          .push(complete_project);
         fs.writeFileSync(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', JSON.stringify(data));
       } else {
-        const temp_array =  [];
-        temp_array.push(complete_project);
+        const temp_array =  []
+          .push(complete_project);
         fs.writeFileSync(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', JSON.stringify(temp_array));
       }  
     }); 
+    //var test = inst.testFunc('testFunc');
+    //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
+    res.redirect('/admin/settings');
   } catch(e){
-    throw e;
+    throw 'myError:' + e;
   }
-  //var test = inst.testFunc('testFunc');
-  //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
-  res.redirect('/admin/settings');
 });
 
-router.get('/verifycontrol', (req, res)=> {
+router.get('/verifycontrol', (req, res)=> { 
   fs.readFile(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', (err,data)=>{
     if(!err){
       let pr_names = JSON.parse(data);
+      console.log('pr_names[0].project_name: '+ pr_names[0].project_name);
+     // let subjects = inst.dirThree(path.join(__dirname, '../memory/', pr_names[0],'/images/'));
       console.log('pr_names: '+ pr_names.length);
       //limst должна вытаскиваться из файла
       res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
-        projects: pr_names, subjects: []
+        projects: pr_names, subjects: pr_names
       });    
-    } else 
-        throw err;
+    } else throw err;
   });
 
   /*sql.query(connectionString,get_dbs_query,(err,rows) =>{
@@ -76,7 +76,15 @@ router.get('/verifycontrol', (req, res)=> {
 
 router.post('/verifycontrol', (req,res)=>{
   console.log('post /verifyconytol by admin');
-  res.status(200).sendFile(path.join(__dirname, '..', '/memory/', + req.body['name'], '/list_of_answers.json'));
+  res.status(200).send(inst.dirThree(path.join(__dirname, '..', '/memory/', req.body['name'],'/images')));
+});
+
+
+router.post('/verifycontrol/:subject', (req,res)=>{
+  console.log('post /verifyconytol by admin: ' + req.params.subject);
+  //path.join(__dirname, '..', '/memory/', + req.body['name'], '/list_of_answers.json')
+  //let array_with_index = inst.getIndexesOfImages();
+  res.status(200).send('done');
 });
 
 //временное решение

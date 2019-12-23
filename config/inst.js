@@ -16,13 +16,17 @@ const readdir = util.promisify(fs.readdir);
 let inst = {
   //возвращает список папок с проектами
   dirTree: function (dir) {
+    //console.log('dirthree: ' + dir);
     let project_list = []; 
-    let list = fs.readdirSync(dir);        
+    let list = fs.readdirSync(dir);       
+    //console.log('list: '+ list.length); 
     for (let item of list) {
       if (fs.statSync(dir + "\\" + item).isDirectory()) {
+        //console.log('project_list' + item);
         project_list.push("\t".repeat(0) + item);
       }
     } 
+    
     return project_list;
 },
   //projects/dir/batches/00000000/
@@ -30,9 +34,10 @@ let inst = {
   getFiles: function (project_name) {
    
     let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000');
-    let paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_list = [];
-    console.log('paths_to_the_aud:' + paths_to_the_aud);
+    let paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_list = [], project_subjects = [];
+    //console.log('paths_to_the_aud:' + paths_to_the_aud);
     
+    //создание папки с проектом, если её нет
     fs.mkdir(path.join(__dirname, '../memory/', project_name), { recursive: true}, (err)=>{
       if(err)
       console.log('err: ' + err);
@@ -73,7 +78,7 @@ let inst = {
               //project-subject-value
               //       -subject-value
               //               -value
-              answers_list.push(
+              /*answers_list.push(
                 '_subject_code': data.batch.page[0].block[3]._ [
                   {
                   'value' : data.batch.page[0].block[i]._ [
@@ -84,8 +89,8 @@ let inst = {
                       'check' : false,
                     }]
                   }]
-              )
-              /*answers_list.push({
+              )*/
+              answers_list.push({
                 'value' : data.batch.page[0].block[i]._,
                 //Путь должен быть относительным
                 '_cropped_image' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
@@ -94,16 +99,21 @@ let inst = {
                 '_subject_code': data.batch.page[0].block[3]._,
                 'check' : false,
                 '_project': project_name
-              })*/
+              })
               
               const varMkDir = mkdir(path.join(__dirname, '../memory/', project_name, '/images/', data.batch.page[0].block[3]._,'/'), {recursive: true });
-                varMkDir.then( imageCrop(item, data, i, project_name))
+              varMkDir.then( 
+                search(data.batch.page[0].block[3]._, project_subjects) ?
+                 project_subjects.push({
+                   'project_name': project_name, 
+                   'project_subject' : data.batch.page[0].block[3]._}) : null
+                ,imageCrop(item, data, i, project_name))
             }
           }        
         })
       }
-    fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/list_of_answers.json',JSON.stringify(answers_list));
-    return project_name;
+    fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/list_of_answers.json', JSON.stringify(answers_list));
+    return project_subjects;
   } catch (err){
       throw err;
     }
@@ -116,11 +126,7 @@ let inst = {
       }
     }
     return false;
-  },
-
-  indexingNumbers: function(file){
-
-  }
+  }, 
 }
 
 function spectre(file, answers){
@@ -198,28 +204,25 @@ function creatingXmlWithFiles(list, project){
 
 //резка изображений
 function imageCrop(item, data, i, project_name){
-  console.log('with toFile:' + i);
-  try{
-    readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
-    .then((inf)=>
-        sharp(inf)
-          .extract(
-            {'left': parseInt(data.batch.page[0].block[i].ATTR.l), 'top': parseInt(data.batch.page[0].block[i].ATTR.t),
-            /*width*/'width' : 1071,//parseInt(data.batch.page[0].block[i].ATTR.r - data.batch.page[0].block[i].ATTR.l),
-            /*height*/'height': 92,//parseInt(data.batch.page[0].block[i].ATTR.b - data.batch.page[0].block[i].ATTR.t)
-          })
-          .toFile(path.join(__dirname, '../memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
-          + '_' + path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png')
-          //.then(console.log)
-          //.catch(imageCrop(item, data, i, project_name))
-    )
-    .catch((err)=>{
-      console.log('err in imageCrop[' + i + ']: '+ err);
-      imageCrop(item, data, i, project_name)
-    })
-}catch(er){
-  throw er;
-}};
+  //console.log('with toFile:' + i);
+  readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
+  .then((inf)=>
+      sharp(inf)
+        .extract(
+          {'left': parseInt(data.batch.page[0].block[i].ATTR.l), 'top': parseInt(data.batch.page[0].block[i].ATTR.t),
+          /*width*/'width' : 1071,//parseInt(data.batch.page[0].block[i].ATTR.r - data.batch.page[0].block[i].ATTR.l),
+          /*height*/'height': 92,//parseInt(data.batch.page[0].block[i].ATTR.b - data.batch.page[0].block[i].ATTR.t)
+        })
+        .toFile(path.join(__dirname, '../memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
+        + '_' + path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png')
+        //.then(console.log)
+        //.catch(imageCrop(item, data, i, project_name))
+  )
+  .catch((err)=>{
+    console.log('err in imageCrop[' + i + ']: '+ err);
+    imageCrop(item, data, i, project_name)
+  })
+} 
 
 //функция для энкодинга 
 function readFileSync_encoding(filename,enc){
