@@ -29,21 +29,8 @@ router.post('/settings',(req,res)=>{
   try{
     //резка изображений
     let complete_project = inst.getFiles(req.body['projects']);   
-    console.log('comp proj sub: '+ complete_project_subjects.length); 
-    fs.stat(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', (err)=>{
-      if(!err)
-      {
-        const file = fs.readFileSync(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json');
-        const data = JSON.parse(file)
-          .push(complete_project);
-        fs.writeFileSync(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', JSON.stringify(data));
-      } else {
-        const temp_array =  []
-          .push(complete_project);
-        fs.writeFileSync(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', JSON.stringify(temp_array));
-      }  
-    }); 
-    //var test = inst.testFunc('testFunc');
+    console.log('comp proj sub: '+ complete_project.length); 
+    fs.writeFileSync(path.join(__dirname, '../memory/', complete_project.project_name, '/') + 'project_subjects.json', JSON.stringify(complete_project));
     //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
     res.redirect('/admin/settings');
   } catch(e){
@@ -52,7 +39,7 @@ router.post('/settings',(req,res)=>{
 });
 
 router.get('/verifycontrol', (req, res)=> { 
-  fs.readFile(path.join(__dirname, '..', '/memory/') + 'list_of_projects.json', (err,data)=>{
+  fs.readFile(path.join(__dirname, '../memory/') + 'list_of_projects.json', (err, data)=>{
     if(!err){
       let pr_names = JSON.parse(data);
       console.log('pr_names[0].project_name: '+ pr_names[0].project_name);
@@ -62,7 +49,8 @@ router.get('/verifycontrol', (req, res)=> {
       res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
         projects: pr_names, subjects: pr_names
       });    
-    } else throw err;
+    } else 
+        res.sendStatus(500);      
   });
 
   /*sql.query(connectionString,get_dbs_query,(err,rows) =>{
@@ -76,7 +64,7 @@ router.get('/verifycontrol', (req, res)=> {
 
 router.post('/verifycontrol', (req,res)=>{
   console.log('post /verifyconytol by admin');
-  res.status(200).send(inst.dirThree(path.join(__dirname, '..', '/memory/', req.body['name'],'/images')));
+  res.status(200).send(inst.dirThree(path.join(__dirname, '../memory/', req.body['name'],'/images')));
 });
 
 

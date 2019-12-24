@@ -71,51 +71,45 @@ let inst = {
         
         //вытаскиваем из файлов необходимые данные
         parser.parseString(xml_string, (err,data) => {
-          for(let i = 0; i < 75; i++){ // число 75 взято от бaлды, лучше будет заменить 
-            let page = data.batch.page[0].block[i];
-            if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){
-              //проверка на существование папки предмета (например 1 - русский) с  ответом или её создание
-              //project-subject-value
-              //       -subject-value
-              //               -value
-              /*answers_list.push(
-                '_subject_code': data.batch.page[0].block[3]._ [
-                  {
-                  'value' : data.batch.page[0].block[i]._ [
-                    {
-                      '_cropped_image' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
-                      path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png',
-                      '_original_image_': item + '.TIF', 
-                      'check' : false,
-                    }]
-                  }]
-              )*/
-              answers_list.push({
-                'value' : data.batch.page[0].block[i]._,
-                //Путь должен быть относительным
-                '_cropped_image' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
-                path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png',
-                '_original_image_': item + '.TIF', 
-                '_subject_code': data.batch.page[0].block[3]._,
-                'check' : false,
-                '_project': project_name
-              })
+          if(err)
+            console.log('err in parseString : ' + err);
+          else{
+            for(let i = 0; i < 75; i++){ // число 75 взято от бaлды, лучше будет заменить 
+              let page = data.batch.page[0].block[i];
+              if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){
+                //проверка на существование папки предмета (например 1 - русский) с  ответом или её создание
               
-              const varMkDir = mkdir(path.join(__dirname, '../memory/', project_name, '/images/', data.batch.page[0].block[3]._,'/'), {recursive: true });
-              varMkDir.then( 
-                search(data.batch.page[0].block[3]._, project_subjects) ?
-                 project_subjects.push({
-                   'project_name': project_name, 
-                   'project_subject' : data.batch.page[0].block[3]._}) : null
-                ,imageCrop(item, data, i, project_name))
-            }
-          }        
+                answers_list.push({
+                  'value' : data.batch.page[0].block[i]._,
+                  //Путь должен быть относительным
+                  '_cropped_image' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
+                  path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png',
+                  '_original_image_': item + '.TIF', 
+                  '_subject_code': data.batch.page[0].block[3]._,
+                  'check' : false,
+                  '_project': project_name
+                }) 
+                localSearchForSubjects(data.batch.page[0].block[3]._ , project_subjects) ?
+                   null : project_subjects.push({
+                    'project_name': project_name, 
+                    'project_subject' : data.batch.page[0].block[3]._ });
+
+                const varMkDir = mkdir(path.join(__dirname, '../memory/', project_name, 
+                '/images/', data.batch.page[0].block[3]._,'/'), {recursive: true });
+                varMkDir.then( 
+                  
+                 imageCrop(item, data, i, project_name)
+                );
+              }
+            } 
+          }       
         })
       }
+    console.log('writing the answers to json ');
     fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/list_of_answers.json', JSON.stringify(answers_list));
     return project_subjects;
   } catch (err){
-      throw err;
+      console.log('myError: ' + err);
     }
   },
   
@@ -127,80 +121,17 @@ let inst = {
     }
     return false;
   }, 
+
 }
 
-function spectre(file, answers){
-  if(answers.length > 0)
-    fs.writeFile(file, answers, (err)=>{
-      if(err) throw err;
-    });
-}
-
-function writingsOfTheWall(file, answer){
-  fs.readFile(file, (err, data)=>{
-    if(!err){
-      console.log('writingsOfTheWall0');
-      if(data == ''){
-        console.log('writingsOfTheWall1: ' + JSON.stringify(answer) + '; ' + answer);
-        fs.writeFile(file, JSON.stringify(answer), (err) => {
-          if(err) throw err;
-        });
-      }
-      else{
-        console.log('writingsOfTheWall2: ' + JSON.stringify(answer) + '; ' + answer);
-        let uncodedData = JSON.stringify(data);
-        uncodedData.push(answer);
-        fs.writeFile(file, answer, (err) => {
-          if(err) throw err;
-        });
-      }
-    } 
-    else {
-      console.log('writingsOfTheWall3 - ' + JSON.stringify(answer) + '; error: ' + err);
-      fs.writeFile(file, JSON.stringify(answer), (err) => {
-        if(err) 
-          throw err;
-      });
+function localSearchForSubjects(subject,subjects_array){
+  for (var i=0; i < subjects_array.length; i++) {
+    if (subjects_array[i].project_subject === subject) {
+        return true;
     }
-  });
+  }
+  return false;
 }
-
-function creatingXmlWithFiles(list, project){
-    //создание xml-ки
-    let batches = xmlBuilder.create('projects', {'project_name': project});
-  if(list.length > 0){
-    console.log("answers length = " + list.length);
-    //сортировка
-    list.sort(function(a, b){
-    if (a.value < b.value) //сортируем строки по возрастанию
-      return -1
-    if (a.value > b.value)
-      return 1
-    return 0 // Никакой сортировки
-  });//,()=>{
-    //создание структуры xml  
-    console.log('creating xml');
-      for(let i = 0; i < list.length; i++){
-        batches.ele('answer',{
-          'id' : list[i].id,
-          'value' : list[i].value,
-          'ref' : list[i].ref,
-          '_image_source': list[i]._image_source,
-          '_subject_code': list[i]._subject_code,
-          'check' : list[i].check,
-          '_project': list[i]._project
-          }
-        )
-      }
-      batches.end({ pretty: true, allowEmpty: true});
-      
-      //запись ссылок на "обрезки" в xml      
-      fs.writeFile(path.join(__dirname, '../memory/', project) + '/list_of_answers.json', batches, (err)=>{
-        if(err)
-          console.error('line 127: ' + err);        
-      });         
-      console.log('batches: ' + batches);
-}}
 
 //резка изображений
 function imageCrop(item, data, i, project_name){
@@ -215,13 +146,11 @@ function imageCrop(item, data, i, project_name){
         })
         .toFile(path.join(__dirname, '../memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
         + '_' + path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png')
-        //.then(console.log)
-        //.catch(imageCrop(item, data, i, project_name))
   )
   .catch((err)=>{
     console.log('err in imageCrop[' + i + ']: '+ err);
-    imageCrop(item, data, i, project_name)
-  })
+    imageCrop(item, data, i, project_name);
+  });
 } 
 
 //функция для энкодинга 
