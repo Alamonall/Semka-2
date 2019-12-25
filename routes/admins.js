@@ -28,9 +28,39 @@ router.post('/settings',(req,res)=>{
   //указываем абсолютный путь к проекту и папкам с изображениями    
   try{
     //резка изображений
-    let complete_project = inst.getFiles(req.body['projects']);   
-    console.log('comp proj sub: '+ complete_project.length); 
-    fs.writeFileSync(path.join(__dirname, '../memory/', complete_project.project_name, '/') + 'project_subjects.json', JSON.stringify(complete_project));
+    let complete_project = inst.getFiles(req.body['projects']);
+    let data_to_serialize = {};         //переменная для жонглирования данных под сериализацию
+    /*
+    {
+      "project" : "project_name"
+      "subjects": [
+        {"sub" : 02},
+        {"sub" : 01},
+        {"sub" : 22},
+      ],
+      "project" : "project_name"
+      "subjects": [
+        {"sub" : 02},
+        {"sub" : 01},
+        {"sub" : 22},
+      ]
+    }
+    *//*Получаем JSOn проекта со списком предметов внутри и порезанными изображениями
+    Далее смотрим, есть ли файл со списком обработанных проектов, проверяем на существование только что обработанного и,
+     либо записываем его, если не нашли, либо пропускаем эту часть*/
+    fs.readFile(path.join(__dirname, '../memory/')+'list_of_projects.json',(err,file)=>{
+      if(!err){
+        data_to_serialize = JSON.parse(file);
+        for(let i = 0; i< data_to_serialize.length; i++){
+          if(data_to_serialize[i].project_name === complete_project.project_name){
+            return;
+          }
+        }
+      }
+      data_to_serialize.push(complete_project);
+      fs.writeFileSync(path.join(__dirname, '../memory/', ) + 'list_of_projects.json', JSON.stringify(data_to_serialize));      
+    })
+
     //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
     res.redirect('/admin/settings');
   } catch(e){
@@ -39,15 +69,17 @@ router.post('/settings',(req,res)=>{
 });
 
 router.get('/verifycontrol', (req, res)=> { 
+  /*
+  Читаем файл с обработанными проектами и предметами, даём их клиенту, 
+  чтобы тот смог выбрать, какой проект и предмет он собирается верифицировать
+  */
   fs.readFile(path.join(__dirname, '../memory/') + 'list_of_projects.json', (err, data)=>{
     if(!err){
-      let pr_names = JSON.parse(data);
-      console.log('pr_names[0].project_name: '+ pr_names[0].project_name);
-     // let subjects = inst.dirThree(path.join(__dirname, '../memory/', pr_names[0],'/images/'));
-      console.log('pr_names: '+ pr_names.length);
-      //limst должна вытаскиваться из файла
+      let bbay = JSON.parse(data);
+      console.log('data: ' + JSON.stringify(bbay.project_name));
+      console.log('data: ' + JSON.stringify(bbay[0].Array[0].project_name));
       res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
-        projects: pr_names, subjects: pr_names
+          projects: JSON.parse(data), subjects: JSON.parse(data)
       });    
     } else 
         res.sendStatus(500);      

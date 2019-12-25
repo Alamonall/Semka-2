@@ -89,15 +89,44 @@ let inst = {
                   'check' : false,
                   '_project': project_name
                 }) 
-                localSearchForSubjects(data.batch.page[0].block[3]._ , project_subjects) ?
-                   null : project_subjects.push({
-                    'project_name': project_name, 
-                    'project_subject' : data.batch.page[0].block[3]._ });
+
+                const project_data = {
+                  "project": "_1_ege_2019_04_10_all" ,
+                  "subjects" :
+                      [
+                          { "project_subject":"_02", 
+                            "answers": [
+                              {"_answer_value": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
+                              ,{"_answer_value2": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
+                              ,{"_answer_value3": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
+                          ]},
+                          { "project_subject":"22", 
+                          " answers": [
+                               {"_answer_value": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
+                              ,{"_answer_value2": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
+                              ,{"_answer_value3": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
+                          ]},
+                          { "project_subject":"01", 
+                            "answers": [
+                               {"_answer_value": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
+                              ,{"_answer_value2": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
+                              ,{"_answer_value3": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
+                          ]}
+                      ]
+              };
+
+              console.log(project_data.project[project_name]);
+
+
+
+                /*
+                (data.batch.page[0].block[3]._ , project_subjects) ?
+                   null : project_subjects.project_name[project_name].subjects.push(
+                     data.batch.page[0].block[3]._ );*/
 
                 const varMkDir = mkdir(path.join(__dirname, '../memory/', project_name, 
                 '/images/', data.batch.page[0].block[3]._,'/'), {recursive: true });
-                varMkDir.then( 
-                  
+                varMkDir.then(                   
                  imageCrop(item, data, i, project_name)
                 );
               }
@@ -123,16 +152,7 @@ let inst = {
   }, 
 
 }
-
-function localSearchForSubjects(subject,subjects_array){
-  for (var i=0; i < subjects_array.length; i++) {
-    if (subjects_array[i].project_subject === subject) {
-        return true;
-    }
-  }
-  return false;
-}
-
+ 
 //резка изображений
 function imageCrop(item, data, i, project_name){
   //console.log('with toFile:' + i);
