@@ -12,17 +12,13 @@ block content
                     div(class='col-sm-6')
                         select(id='prjlst' name='project_list' onChange='get_Subjects()' class="form-control")
                             each project in projects
-                                option(value=project.project_name)= project.project_name
+                                option(value=project.project)= project.project
                             else
                                 option(value='null') null
             div(class='form-group row')
                     label(class="col-sm-3 col-form-label") Предмет:
                     div(class='col-sm-6')
                         select(id='sbjlist' name='subject_list' onchange="get_Images();" class="form-control")
-                            each subject in subjects
-                                option(value=subject.project_subjects)= subject.project_subjects
-                            else
-                                option(value='null') null
             table(class='table table-bordered')
                 tbody
                 tr
@@ -65,6 +61,7 @@ block content
                 var xhr = new XMLHttpRequest();
                 var body = 'type=prj' + '&name=' + document.getElementById('prjlst').value;
                 let sbjs_select = document.getElementById('sbjlist'); 
+
                 //alert('alert: ' + body);
                 xhr.open('POST', '/admin/verifycontrol');
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -76,9 +73,9 @@ block content
                             case 200: {
                                 console.log('xhr.responseText: ' + xhr.responseText);
                                 let arr = JSON.parse(xhr.responseText);
-                                for(let i = 0; i< arr.length;i++){
+                                for(let i = 0; i< arr.subjects.length;i++){
                                     let option = document.createElement("option");
-                                        option.text = arr[i];
+                                        option.text = arr.subjects[i];
                                         sbjs_select.add(option);
                                 }
                                 break;
@@ -93,7 +90,6 @@ block content
                         }
                     }
                 }
-
             }
             
         

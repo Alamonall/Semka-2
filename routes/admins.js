@@ -29,7 +29,7 @@ router.post('/settings',(req,res)=>{
   try{
     //резка изображений
     let complete_project = inst.getFiles(req.body['projects']);
-    let data_to_serialize = {};         //переменная для жонглирования данных под сериализацию
+    let data_to_serialize = {"projects" : []};         //переменная для жонглирования данных под сериализацию
     /*
     {
       "project" : "project_name"
@@ -51,13 +51,14 @@ router.post('/settings',(req,res)=>{
     fs.readFile(path.join(__dirname, '../memory/')+'list_of_projects.json',(err,file)=>{
       if(!err){
         data_to_serialize = JSON.parse(file);
-        for(let i = 0; i< data_to_serialize.length; i++){
-          if(data_to_serialize[i].project_name === complete_project.project_name){
-            return;
+        for(let i = 0; i< data_to_serialize.projects.length; i++){
+          if(data_to_serialize.projects[i].project === complete_project.project){
+            //Удаляем проект из готовых на тот случай, если его специально решили перезаписать
+            delete(data_to_serialize.projects[i].project);
           }
         }
       }
-      data_to_serialize.push(complete_project);
+      data_to_serialize.projects.push(complete_project);
       fs.writeFileSync(path.join(__dirname, '../memory/', ) + 'list_of_projects.json', JSON.stringify(data_to_serialize));      
     })
 
@@ -76,10 +77,8 @@ router.get('/verifycontrol', (req, res)=> {
   fs.readFile(path.join(__dirname, '../memory/') + 'list_of_projects.json', (err, data)=>{
     if(!err){
       let bbay = JSON.parse(data);
-      console.log('data: ' + JSON.stringify(bbay.project_name));
-      console.log('data: ' + JSON.stringify(bbay[0].Array[0].project_name));
       res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
-          projects: JSON.parse(data), subjects: JSON.parse(data)
+          projects: bbay.projects, subjects: bbay.projects
       });    
     } else 
         res.sendStatus(500);      

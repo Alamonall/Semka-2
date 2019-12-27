@@ -33,8 +33,17 @@ let inst = {
 
   getFiles: function (project_name) {
    
-    let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000');
-    let paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_list = [], project_subjects = [];
+    let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000'),
+      paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_list = [],
+      project = {"project" : project_name, "subjects": []},
+      answers = {
+        "project": project_name,
+        "subject": "", 
+        "answers": [
+          {"answer" : "",
+            "sources": []}
+        ]
+      };
     //console.log('paths_to_the_aud:' + paths_to_the_aud);
     
     //создание папки с проектом, если её нет
@@ -64,6 +73,7 @@ let inst = {
 
     try{
       fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/list_of_answers.json');
+    
       for(let item of aud_list){
         //console.log('xml path: '+ item + '.XML');   
         //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
@@ -89,42 +99,15 @@ let inst = {
                   'check' : false,
                   '_project': project_name
                 }) 
-
-                const project_data = {
-                  "project": "_1_ege_2019_04_10_all" ,
-                  "subjects" :
-                      [
-                          { "project_subject":"_02", 
-                            "answers": [
-                              {"_answer_value": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
-                              ,{"_answer_value2": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
-                              ,{"_answer_value3": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
-                          ]},
-                          { "project_subject":"22", 
-                          " answers": [
-                               {"_answer_value": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
-                              ,{"_answer_value2": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
-                              ,{"_answer_value3": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
-                          ]},
-                          { "project_subject":"01", 
-                            "answers": [
-                               {"_answer_value": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
-                              ,{"_answer_value2": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
-                              ,{"_answer_value3": ["_ref0", "_ref1", "_ref2", "_ref3", "_ref3"]}
-                          ]}
-                      ]
-              };
-
-              console.log(project_data.project[project_name]);
+                
+                /*if(!mySearch(data.batch.page[0].block[3]._, project.subjects)){
+                    project.subjects.push(data.batch.page[0].block[3]._);
+                }*/
+                mySearch(data.batch.page[0].block[3]._, project.subjects) ? 
+                  null : project.subjects.push(data.batch.page[0].block[3]._);
 
 
-
-                /*
-                (data.batch.page[0].block[3]._ , project_subjects) ?
-                   null : project_subjects.project_name[project_name].subjects.push(
-                     data.batch.page[0].block[3]._ );*/
-
-                const varMkDir = mkdir(path.join(__dirname, '../memory/', project_name, 
+                let varMkDir = mkdir(path.join(__dirname, '../memory/', project_name, 
                 '/images/', data.batch.page[0].block[3]._,'/'), {recursive: true });
                 varMkDir.then(                   
                  imageCrop(item, data, i, project_name)
@@ -136,23 +119,23 @@ let inst = {
       }
     console.log('writing the answers to json ');
     fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/list_of_answers.json', JSON.stringify(answers_list));
-    return project_subjects;
+    return project;
   } catch (err){
       console.log('myError: ' + err);
     }
-  },
-  
-  search: function (nameKey, myarray){
-    for (var i=0; i < myarray.length; i++) {
-      if (myarray[i].pr_name === nameKey) {
-          return true;
-      }
-    }
-    return false;
   }, 
 
 }
  
+function mySearch(nameKey, myarray){
+  for (let i=0; i < myarray.length; i++) {
+    if (myarray[i] === nameKey) {
+        return true;
+    }
+  }
+  return false;
+}
+
 //резка изображений
 function imageCrop(item, data, i, project_name){
   //console.log('with toFile:' + i);
