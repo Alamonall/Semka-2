@@ -78,7 +78,7 @@ router.get('/verifycontrol', (req, res)=> {
     if(!err){
       let bbay = JSON.parse(data);
       res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
-          projects: bbay.projects, subjects: bbay.projects
+          projects: bbay.projects, subjects: bbay.projects[0].subjects
       });    
     } else 
         res.sendStatus(500);      
@@ -93,9 +93,15 @@ router.get('/verifycontrol', (req, res)=> {
   })  */
 });
 
-router.post('/verifycontrol', (req,res)=>{
+router.post('/verifycontrol/:project', (req,res)=>{
   console.log('post /verifyconytol by admin');
-  res.status(200).send(inst.dirThree(path.join(__dirname, '../memory/', req.body['name'],'/images')));
+  fs.readFile(path.join(__dirname, '../memory/') + 'list_of_projects.json', (err, data)=>{
+    if(!err){
+      let bbay = JSON.parse(data);
+      console.log('post project: ' + bbay.projects[req.params.project].project);
+      res.status(200).send(bbay.projects[req.params.project].project);
+    }}
+  );
 });
 
 

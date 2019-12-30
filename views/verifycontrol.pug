@@ -19,6 +19,10 @@ block content
                     label(class="col-sm-3 col-form-label") Предмет:
                     div(class='col-sm-6')
                         select(id='sbjlist' name='subject_list' onchange="get_Images();" class="form-control")
+                            each subject in subjects
+                                option(value=subject)= subject
+                            else
+                                option(value='null') null
             table(class='table table-bordered')
                 tbody
                 tr
@@ -36,15 +40,15 @@ block content
                     if (xhr.readyState === xhr.DONE) {
                         switch(xhr.status){
                             case 200: {
-                                console.log('xhr.responseText: ' + xhr.responseText);
-                                /*let sbjs_select = document.getElementById('sbjlist') 
+                                /*console.log('xhr.responseText: ' + xhr.responseText);
+                                let sbjs_select = document.getElementById('sbjlist') 
                                 let arr = JSON.parse(xhr.responseText);
-                                for(let i = 0; i< arr.length;i++){
+                                for(let i = 0; i< arr.length; i++){
                                     let option = document.createElement("option");
                                         option.text = arr[i];
                                         sbjs_select.add(option);
-                                }
-                                break;*/
+                                }*/
+                                break;
                             }
                             case 500: {
                                 //console.log('response 500: ' + xhr.responseText);
@@ -59,13 +63,13 @@ block content
             }
             function get_Subjects(){   
                 var xhr = new XMLHttpRequest();
-                var body = 'type=prj' + '&name=' + document.getElementById('prjlst').value;
+                //var body = 'type=prj' + '&name=' + document.getElementById('prjlst').value;
                 let sbjs_select = document.getElementById('sbjlist'); 
 
                 //alert('alert: ' + body);
-                xhr.open('POST', '/admin/verifycontrol');
+                xhr.open('POST', '/admin/verifycontrol/:' + document.getElementById('prjlst').value);
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                xhr.send(body);
+                //xhr.send(body);
                 
                 xhr.onload = function () {
                     if (xhr.readyState === xhr.DONE) {
