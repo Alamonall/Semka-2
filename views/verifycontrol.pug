@@ -10,7 +10,7 @@ block content
             div(class='form-group row')
                     label(class="col-sm-3 col-form-label") Проекты:
                     div(class='col-sm-6')
-                        select(id='prjlst' name='project_list' onChange='get_Subjects()' class="form-control")
+                        select(id='prjlst' class="form-control")
                             each project in projects
                                 option(value=project.project)= project.project
                             else
@@ -18,7 +18,7 @@ block content
             div(class='form-group row')
                     label(class="col-sm-3 col-form-label") Предмет:
                     div(class='col-sm-6')
-                        select(id='sbjlist' name='subject_list' onchange="get_Images();" class="form-control")
+                        select(id='sbjlst' class="form-control")
                             each subject in subjects
                                 option(value=subject)= subject
                             else
@@ -29,68 +29,37 @@ block content
                 td Test1
             button(type="submit" class='btn btn-primary') Проверить
         script.
-            function get_Images(){   
-                var xhr = new XMLHttpRequest();
-                var body = 'type=sbj' + '&name=' + document.getElementById('sbjlist').value;
-                //alert('alert: ' + body);
-                xhr.open('POST', '/admin/verifycontrol/' +  document.getElementById('sbjlist').value);
-                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                xhr.send(body);
-                xhr.onload = function () {
-                    if (xhr.readyState === xhr.DONE) {
-                        switch(xhr.status){
-                            case 200: {
-                                /*console.log('xhr.responseText: ' + xhr.responseText);
-                                let sbjs_select = document.getElementById('sbjlist') 
-                                let arr = JSON.parse(xhr.responseText);
-                                for(let i = 0; i< arr.length; i++){
-                                    let option = document.createElement("option");
-                                        option.text = arr[i];
-                                        sbjs_select.add(option);
-                                }*/
-                                break;
-                            }
-                            case 500: {
-                                //console.log('response 500: ' + xhr.responseText);
-                                /*let option = document.createElement("option");
-                                option.text = 'null';
-                                sbjs_select.add(option);
-                                break;*/
-                            }
+           $(document).ready(function(){
+               $("#prjlst").change(function(){ 
+                   $.ajax({ 
+                        type: 'post',
+                        url: '/admin/verifycontrol/get/subjects',
+                        data: 'project_value=' + $("select#prjlst").val(),
+                        success: (data)=>{
+                            $("#sbjlst").empty(); 
+                            $.each(data, function(key, value) { 
+                                $('#sbjlst').append(new Option(value, key))
+                            })   
+                        },
+                        error: ()=>{
+                            alert('Шо то не так( ' + document.getElementById('prjlst').value)
                         }
-                    }
-                }
-            }
-            function get_Subjects(){   
-                let xhr = new XMLHttpRequest();
-                let body = 'type=prj' + '&name=' + document.getElementById('prjlst').value;
-                let sbjs_select = document.getElementById('sbjlist'); 
+                    });
+               })
+               $('#sbjlst').change(()=>{
+                   $.ajax({
+                       type: 'post',
+                       url: '/admin/verifycontrol/get/images',
+                       data: 'subject_value=' + $("select#sbjlst").val(),
+                        success: (data)=>{
+                            console.log('it all good!')
+                        },
+                        error: ()=>{
+                            console.log('Шо то не так( ' + document.getElementById('prjlst').value)
+                        }
 
-                //alert('alert: ' + body);
-                xhr.open('POST', '/admin/verifycontrol/:' + document.getElementById('prjlst').value);
-                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                xhr.send(body);
-                xhr.onload = function () {
-                    if (xhr.readyState === xhr.DONE) {
-                        switch(xhr.status){
-                            case 200: {
-                                console.log('xhr.responseText 200: ' + xhr.responseText);
-                                console.log('sbjs_select length: ' + sbjs_select.options.length);
-                                let arr = JSON.parse(xhr.responseText);
-                                sbjs_select.empty();
-                                for(let i = 0; i< arr.length;i++){
-                                    let option = document.createElement("option");
-                                        option.text = arr[i];
-                                        sbjs_select.add(option);                                        
-                                }
-                                break;
-                                }
-                            case 500: {
-                               console.log('xhr.responseText 500: ' + xhr.responseText);                             
-                            }
-                        }
-                    }
-                }
-            }
+                   })
+               })
+           })
             
         
