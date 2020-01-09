@@ -94,23 +94,30 @@ router.get('/verifycontrol', (req, res)=> {
 });
 
 router.post('/verifycontrol/:project', (req,res)=>{
-  console.log('post /verifyconytol by admin');
+  console.log('post /verifyconytol by admin/:project: ' + req.params.project.substring(1));
   fs.readFile(path.join(__dirname, '../memory/') + 'list_of_projects.json', (err, data)=>{
     if(!err){
       let bbay = JSON.parse(data);
-      console.log('post project: ' + bbay.projects[req.params.project].project);
-      res.status(200).send(bbay.projects[req.params.project].project);
-    }}
+      for(i in bbay.projects){
+        if(bbay.projects[i].project === req.params.project.substring(1)){
+          res.status(200).send(bbay.projects[i].subjects);
+        }
+      }      
+    }
+    else{
+      res.status(500).send('cannot get the subjects of the project');
+    }
+  }
   );
 });
 
 
-router.post('/verifycontrol/:subject', (req,res)=>{
+/*router.post('/verifycontrol/:subject', (req,res)=>{
   console.log('post /verifyconytol by admin: ' + req.params.subject);
   //path.join(__dirname, '..', '/memory/', + req.body['name'], '/list_of_answers.json')
   //let array_with_index = inst.getIndexesOfImages();
   res.status(200).send('done');
-});
+});*/
 
 //временное решение
 let temp_user_list_rows = ({UserFIO: 'a'},{UserName:'b'});

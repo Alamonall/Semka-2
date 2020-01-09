@@ -33,7 +33,7 @@ block content
                 var xhr = new XMLHttpRequest();
                 var body = 'type=sbj' + '&name=' + document.getElementById('sbjlist').value;
                 //alert('alert: ' + body);
-                xhr.open('POST', '/admin/verifycontrol/:' +  document.getElementById('sbjlist').value);
+                xhr.open('POST', '/admin/verifycontrol/' +  document.getElementById('sbjlist').value);
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                 xhr.send(body);
                 xhr.onload = function () {
@@ -62,34 +62,31 @@ block content
                 }
             }
             function get_Subjects(){   
-                var xhr = new XMLHttpRequest();
-                //var body = 'type=prj' + '&name=' + document.getElementById('prjlst').value;
+                let xhr = new XMLHttpRequest();
+                let body = 'type=prj' + '&name=' + document.getElementById('prjlst').value;
                 let sbjs_select = document.getElementById('sbjlist'); 
 
                 //alert('alert: ' + body);
                 xhr.open('POST', '/admin/verifycontrol/:' + document.getElementById('prjlst').value);
                 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                //xhr.send(body);
-                
+                xhr.send(body);
                 xhr.onload = function () {
                     if (xhr.readyState === xhr.DONE) {
                         switch(xhr.status){
                             case 200: {
-                                console.log('xhr.responseText: ' + xhr.responseText);
+                                console.log('xhr.responseText 200: ' + xhr.responseText);
+                                console.log('sbjs_select length: ' + sbjs_select.options.length);
                                 let arr = JSON.parse(xhr.responseText);
-                                for(let i = 0; i< arr.subjects.length;i++){
+                                sbjs_select.empty();
+                                for(let i = 0; i< arr.length;i++){
                                     let option = document.createElement("option");
-                                        option.text = arr.subjects[i];
-                                        sbjs_select.add(option);
+                                        option.text = arr[i];
+                                        sbjs_select.add(option);                                        
                                 }
                                 break;
                                 }
                             case 500: {
-                               // console.log('response 500: ' + xhr.responseText);
-                                let option = document.createElement("option");
-                                option.text = 'null';
-                                sbjs_select.add(option);
-                                break;
+                               console.log('xhr.responseText 500: ' + xhr.responseText);                             
                             }
                         }
                     }
