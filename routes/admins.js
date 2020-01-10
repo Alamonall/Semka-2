@@ -118,7 +118,11 @@ router.post('/verifycontrol/get/subjects', (req,res)=>{
 
 router.post('/verifycontrol/get/images', (req,res)=>{
   console.log('post /get images by admin: ' +  req.body.subject_value);
-  //path.join(__dirname, '..', '/memory/', + req.body['name'], '/list_of_answers.json')
+  fs.readFile(path.join(__dirname, '../memory/' + req.body.project_value) + '/list_of_answers.json', (err,data)=>{
+    if(!err){
+      inst.indexingImages(req.body.subject_value, data);
+    }
+  });
   //let array_with_index = inst.getIndexesOfImages();
   res.status(200).send('done');
 });

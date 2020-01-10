@@ -50,7 +50,11 @@ block content
                    $.ajax({
                        type: 'post',
                        url: '/admin/verifycontrol/get/images',
-                       data: 'subject_value=' + $("select#sbjlst").val(),
+                       //data: 'subject_value=' + $("select#sbjlst").val() + '&project_value=' + $("select#prjlst").val(),
+                        data: {
+                            'subject_value' :$("select#sbjlst").val(),
+                         'project_value' : $("select#prjlst").val()
+                         },
                         success: (data)=>{
                             console.log('it all good!')
                         },

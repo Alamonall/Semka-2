@@ -35,15 +35,8 @@ let inst = {
    
     let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000'),
       paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_list = [],
-      project = {"project" : project_name, "subjects": []},
-      answers = {
-        "project": project_name,
-        "subject": "", 
-        "answers": [
-          {"answer" : "",
-            "sources": []}
-        ]
-      };
+      project = {"project" : project_name, "subjects": []};
+    let answers = {};
     //console.log('paths_to_the_aud:' + paths_to_the_aud);
     
     //создание папки с проектом, если её нет
@@ -88,24 +81,70 @@ let inst = {
               let page = data.batch.page[0].block[i];
               if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){
                 //проверка на существование папки предмета (например 1 - русский) с  ответом или её создание
-              
+                
+                /*{
+                  "sbj1":  //код предмета
+                   {"sources" : [
+                     {"ref": "ref1", //ссылка на обрезанное изображение
+                      "status" : "0",
+                    "id": 0}, //0 - не обработано, 1 - негрубая ошибка, 2 - грубая ошибка
+                   ]},
+                   "sbj2":  //код предмета
+                   {"sources" : [
+                     {"ref": "ref1", //ссылка на обрезанное изображение
+                      "status" : "0",
+                      "id": 0}, //0 - не обработано, 1 - негрубая ошибка, 2 - грубая ошибка
+                   ]}                   
+                }              */
+
                 answers_list.push({
-                  'value' : data.batch.page[0].block[i]._,
+                  //новые элементы
+                  "id" : 0,
+                  "status": 0, //статусы проверки изображений: 0 - не обработано, 1 - негрубая ошибка, 2 - грубая ошибка
+                  'check' : false, //взято ли изображение на проверку
+                  //
+                  'value' : data.batch.page[0].block[i]._, //значение
                   //Путь должен быть относительным
                   '_cropped_image' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
-                  path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png',
-                  '_original_image_': item + '.TIF', 
-                  '_subject_code': data.batch.page[0].block[3]._,
-                  'check' : false,
-                  '_project': project_name
+                  path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png', //обрезанное изображение
+                  '_original_image_': item + '.TIF', //бланк, откуда было вырезано изображение
+                  '_subject_code': data.batch.page[0].block[3]._, //код предмета
+                  '_project': project_name // имя проекта
                 }) 
                 
-                /*if(!mySearch(data.batch.page[0].block[3]._, project.subjects)){
-                    project.subjects.push(data.batch.page[0].block[3]._);
-                }*/
-                mySearch(data.batch.page[0].block[3]._, project.subjects) ? 
-                  null : project.subjects.push(data.batch.page[0].block[3]._);
+ 
+                //mySearch(data.batch.page[0].block[3]._, project.subjects) ? 
+                //  null : project.subjects.push(data.batch.page[0].block[3]._);
+                //Проверяем, есть ли в project уже текущий код предмета
+                if(!mySearch(data.batch.page[0].block[3]._, project.subjects)){
+                  project.subjects.push(data.batch.page[0].block[3]._);
+                  answers[data.batch.page[0].block[3]._];
+                }
 
+                let val = data.batch.page[0].block[i]._;
+                let cropped = path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
+                path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png';
+                if(answers[data.batch.page[0].block[3]._]){
+                  answers[data.batch.page[0].block[3]._][val].push(
+                      {
+                        "ref": cropped, 
+                        "status" : 0,
+                        "id" : 0
+                      }
+                  );
+                } else{
+                    //if(answers[data.batch.page[0].block[3]._][val]){
+                      answers[data.batch.page[0].block[3]._] = { val:
+                        [
+                          {
+                            "ref": cropped, 
+                            "status" : 0,
+                            "id" : 0
+                          }
+                        ]
+                      }
+                  //}
+                }
 
                 let varMkDir = mkdir(path.join(__dirname, '../memory/', project_name, 
                 '/images/', data.batch.page[0].block[3]._,'/'), {recursive: true });
@@ -119,12 +158,32 @@ let inst = {
       }
     console.log('writing the answers to json ');
     fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/list_of_answers.json', JSON.stringify(answers_list));
+    fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/answers.json', JSON.stringify(answers));
     return project;
   } catch (err){
-      console.log('myError: ' + err);
+      console.log(err);
     }
   }, 
 
+
+  //функция, которая сортирует и разбирает изображения с ответами участников на поля, 
+  //чтобы вернуть их клиенту для отображения
+  indexingImages: function(list_of_answers, subject){
+    let json = JSON.parse(list_of_answers); 
+    let list = []; 
+    let answers = {
+      "project": json._project,
+      "subject": subject, 
+      "answers": [
+        {"answer" : "",
+          "sources": []}
+      ]
+    };
+    for(i in json){
+
+    }
+    return list;
+  }
 }
  
 function mySearch(nameKey, myarray){
