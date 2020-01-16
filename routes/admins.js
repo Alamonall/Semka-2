@@ -4,11 +4,19 @@ var sql = require("msnodesqlv8");
 let path = require('path');
 let fs = require('fs');
 let inst = require('../config/inst.js');
+let mysql = require("mysql2");
 
 const connectionString = 
 'Driver=SQL Server Native Client 11.0;DSN=SQLNative DSN;SERVER=erbd38;Database=erbd_ege_reg_19_38;Trusted_Connection=yes;';
 const get_dbs_query = 'select dtb.name from master.sys.databases as dtb where dtb.name like \'%erbd%\''
 const get_users_query = 'SELECT UserName ,UserFIO FROM [TRDB1].[dbo].[useUsers]'
+
+const connection = mysql.createConnection({
+  host: "localhost",
+  user: "admin",
+  database: "ver_db",
+  password: "Adminspassword"
+});
 
 router.get('/admin', (req, res)=>{
     res.render('admin', { title: 'Здесь вы можете проверить верификацию' });
@@ -28,42 +36,11 @@ router.post('/settings',(req,res)=>{
   //указываем абсолютный путь к проекту и папкам с изображениями    
   try{
     //резка изображений
-    let complete_project = inst.getFiles(req.body['projects']);
-    let data_to_serialize = {"projects" : []};         //переменная для жонглирования данных под сериализацию
-    /*
-    {
-      "project" : "project_name"
-      "subjects": [
-        {"sub" : 02},
-        {"sub" : 01},
-        {"sub" : 22},
-      ],
-      "project" : "project_name"
-      "subjects": [
-        {"sub" : 02},
-        {"sub" : 01},
-        {"sub" : 22},
-      ]
-    }
-    *//*Получаем JSOn проекта со списком предметов внутри и порезанными изображениями
+    //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
+    inst.getFiles(req.body['projects']) ? res.redirect('/admin/settings') : res.send("Ошибка в резке изображений").status('500');
+  /*Получаем JSOn проекта со списком предметов внутри и порезанными изображениями
     Далее смотрим, есть ли файл со списком обработанных проектов, проверяем на существование только что обработанного и,
      либо записываем его, если не нашли, либо пропускаем эту часть*/
-    fs.readFile(path.join(__dirname, '../memory/')+'list_of_projects.json',(err,file)=>{
-      if(!err){
-        data_to_serialize = JSON.parse(file);
-        for(let i = 0; i< data_to_serialize.projects.length; i++){
-          if(data_to_serialize.projects[i].project === complete_project.project){
-            //Удаляем проект из готовых на тот случай, если его специально решили перезаписать
-            delete(data_to_serialize.projects[i].project);
-          }
-        }
-      }
-      data_to_serialize.projects.push(complete_project);
-      fs.writeFileSync(path.join(__dirname, '../memory/', ) + 'list_of_projects.json', JSON.stringify(data_to_serialize));      
-    })
-
-    //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
-    res.redirect('/admin/settings');
   } catch(e){
     throw 'myError:' + e;
   }
@@ -74,16 +51,20 @@ router.get('/verifycontrol', (req, res)=> {
   Читаем файл с обработанными проектами и предметами, даём их клиенту, 
   чтобы тот смог выбрать, какой проект и предмет он собирается верифицировать
   */
-  fs.readFile(path.join(__dirname, '../memory/') + 'list_of_projects.json', (err, data)=>{
-    if(!err){
-      let bbay = JSON.parse(data);
+  connection.query('select project_name from complete_projects', (err,result)=>{
+    if(err){
+      res.send("Ошибка в получении проектов").status(500);
+    } else{
       res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
-          projects: bbay.projects, subjects: bbay.projects[0].subjects
-      });    
-    } else 
-        res.sendStatus(500);      
-  });
-
+          projects: result
+    });
+    }
+  }); 
+  connection.end((err)=> {
+      if (err) {
+        return console.log("Ошибка: " + err.message);
+        }
+  })
   /*sql.query(connectionString,get_dbs_query,(err,rows) =>{
    // console.log(rows);
     if(err) 
@@ -96,6 +77,12 @@ router.get('/verifycontrol', (req, res)=> {
 router.post('/verifycontrol/get/subjects', (req,res)=>{
   try{
     console.log('post /get subjects by admin: ' +  req.body.project_value);
+    connection.query("select subject_code from complete_projects where project_name = " + req.body.project_value, (err,result)=>{
+      if(!err){
+        res.status(200).send(result);
+      }
+    })
+    /*
     fs.readFile(path.join(__dirname, '../memory/') + 'list_of_projects.json', (err, data)=>{
       if(!err){
         let bbay = JSON.parse(data);
@@ -108,8 +95,7 @@ router.post('/verifycontrol/get/subjects', (req,res)=>{
       else{
         res.status(500).send('cannot get the subjects of the project');
       }
-    }
-    );
+    });*/
   } catch(err){
   throw err;
 }

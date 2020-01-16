@@ -6,7 +6,8 @@ let iconvlite = require('iconv-lite');
 let xmlBuilder = require('xmlbuilder');
 let parser = new xml2js.Parser({ attrkey: "ATTR" });
 const util = require('util');
-
+const mysql = require("mysql2");
+  
 const stat = util.promisify(fs.stat);
 const readFile = util.promisify(fs.readFile);
 const mkdir = util.promisify(fs.mkdir);
@@ -34,11 +35,15 @@ let inst = {
   getFiles: function (project_name) {
    
     let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000'),
-      paths_to_the_aud = fs.readdirSync(dir), aud_list = [], answers_list = [],
-      project = {"project" : project_name, "subjects": []};
-    let answers = {};
-    //console.log('paths_to_the_aud:' + paths_to_the_aud);
-    
+      paths_to_the_aud = fs.readdirSync(dir), aud_list = [];
+
+    const pool = mysql.createPool({
+      host: "localhost",
+      user: "admin",
+      database: "ver_db",
+      password: "Adminspassword"
+    });
+
     //создание папки с проектом, если её нет
     fs.mkdir(path.join(__dirname, '../memory/', project_name), { recursive: true}, (err)=>{
       if(err)
@@ -75,76 +80,39 @@ let inst = {
         //вытаскиваем из файлов необходимые данные
         parser.parseString(xml_string, (err,data) => {
           if(err)
-            console.log('err in parseString : ' + err);
+            console.error('err in parseString : ' + err);
           else{
             for(let i = 0; i < 75; i++){ // число 75 взято от бaлды, лучше будет заменить 
               let page = data.batch.page[0].block[i];
               if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){
                 //проверка на существование папки предмета (например 1 - русский) с  ответом или её создание
                 
-                /*{
-                  "sbj1":  //код предмета
-                   {"sources" : [
-                     {"ref": "ref1", //ссылка на обрезанное изображение
-                      "status" : "0",
-                    "id": 0}, //0 - не обработано, 1 - негрубая ошибка, 2 - грубая ошибка
-                   ]},
-                   "sbj2":  //код предмета
-                   {"sources" : [
-                     {"ref": "ref1", //ссылка на обрезанное изображение
-                      "status" : "0",
-                      "id": 0}, //0 - не обработано, 1 - негрубая ошибка, 2 - грубая ошибка
-                   ]}                   
-                }              */
-
-                answers_list.push({
-                  //новые элементы
-                  "id" : 0,
-                  "status": 0, //статусы проверки изображений: 0 - не обработано, 1 - негрубая ошибка, 2 - грубая ошибка
-                  'check' : false, //взято ли изображение на проверку
-                  //
-                  'value' : data.batch.page[0].block[i]._, //значение
-                  //Путь должен быть относительным
-                  '_cropped_image' : path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
-                  path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png', //обрезанное изображение
-                  '_original_image_': item + '.TIF', //бланк, откуда было вырезано изображение
-                  '_subject_code': data.batch.page[0].block[3]._, //код предмета
-                  '_project': project_name // имя проекта
-                }) 
+                /*
+                  вставка данных в бд об обрезанном изображении
+                */
+                let sql = "insert into answers(`status`, `onhand`, `value`, `cropped_image`, `original_image`, `subject_code`, `project_name`)" 
+                  +' values( ' + 0 +','+ 0 +',\"'+ data.batch.page[0].block[i]._ + '\",\"' + path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
+                  path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png' +'\",\"'+
+                   item + '.TIF' + '\",'+ data.batch.page[0].block[3]._ + ',\"' + project_name + '\")';
                 
- 
-                //mySearch(data.batch.page[0].block[3]._, project.subjects) ? 
-                //  null : project.subjects.push(data.batch.page[0].block[3]._);
-                //Проверяем, есть ли в project уже текущий код предмета
-                if(!mySearch(data.batch.page[0].block[3]._, project.subjects)){
-                  project.subjects.push(data.batch.page[0].block[3]._);
-                  answers[data.batch.page[0].block[3]._];
-                }
+                pool.execute(sql,(err)=>{
+                      if(err) 
+                        return console.error("Ошибка: " + err.message); 
+                })
+                pool.execute('insert into complete_projects(project_name,subject_code) values(\"' + project_name + '\",' + data.batch.page[0].block[3]._ +') ON DUPLICATE KEY UPDATE project_name = ' + project_name + ' and subject_code = ' + data.batch.page[0].block[3]._,(err)=>{
+                  if(err)  return console.log("Ошибка: " + err.message);
+                })
 
-                let val = data.batch.page[0].block[i]._;
-                let cropped = path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
-                path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png';
-                if(answers[data.batch.page[0].block[3]._]){
-                  answers[data.batch.page[0].block[3]._][val].push(
-                      {
-                        "ref": cropped, 
-                        "status" : 0,
-                        "id" : 0
-                      }
-                  );
-                } else{
-                    //if(answers[data.batch.page[0].block[3]._][val]){
-                      answers[data.batch.page[0].block[3]._] = { val:
-                        [
-                          {
-                            "ref": cropped, 
-                            "status" : 0,
-                            "id" : 0
-                          }
-                        ]
-                      }
-                  //}
-                }
+                /*pool.execute("select * from complete_projects where complete_projects.project_name = \"" + project_name + "\" and complete_projects.subject_code = " +  data.batch.page[0].block[3]._ , (err, result)=>{
+                  if(err){
+                     return console.log("Ошибка: " + err.message);
+                  }
+                  else{
+                    if(result.length === 0){
+                     
+                    }
+                  }
+                }) */
 
                 let varMkDir = mkdir(path.join(__dirname, '../memory/', project_name, 
                 '/images/', data.batch.page[0].block[3]._,'/'), {recursive: true });
@@ -156,45 +124,20 @@ let inst = {
           }       
         })
       }
-    console.log('writing the answers to json ');
-    fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/list_of_answers.json', JSON.stringify(answers_list));
-    fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/answers.json', JSON.stringify(answers));
-    return project;
+    //console.log('writing the answers to json ');
+    //fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/list_of_answers.json', JSON.stringify(answers_list));
+    //fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/answers.json', JSON.stringify(answers));
+    
+     
+
+    return true;
+
   } catch (err){
-      console.log(err);
+      console.error('Ошибика: ' + err);
     }
   }, 
-
-
-  //функция, которая сортирует и разбирает изображения с ответами участников на поля, 
-  //чтобы вернуть их клиенту для отображения
-  indexingImages: function(list_of_answers, subject){
-    let json = JSON.parse(list_of_answers); 
-    let list = []; 
-    let answers = {
-      "project": json._project,
-      "subject": subject, 
-      "answers": [
-        {"answer" : "",
-          "sources": []}
-      ]
-    };
-    for(i in json){
-
-    }
-    return list;
-  }
 }
  
-function mySearch(nameKey, myarray){
-  for (let i=0; i < myarray.length; i++) {
-    if (myarray[i] === nameKey) {
-        return true;
-    }
-  }
-  return false;
-}
-
 //резка изображений
 function imageCrop(item, data, i, project_name){
   //console.log('with toFile:' + i);
