@@ -98,21 +98,11 @@ let inst = {
                 pool.execute(sql,(err)=>{
                       if(err) 
                         return console.error("Ошибка: " + err.message); 
-                })
-                pool.execute('insert into complete_projects(project_name,subject_code) values(\"' + project_name + '\",' + data.batch.page[0].block[3]._ +') ON DUPLICATE KEY UPDATE project_name = ' + project_name + ' and subject_code = ' + data.batch.page[0].block[3]._,(err)=>{
-                  if(err)  return console.log("Ошибка: " + err.message);
-                })
+                });
 
-                /*pool.execute("select * from complete_projects where complete_projects.project_name = \"" + project_name + "\" and complete_projects.subject_code = " +  data.batch.page[0].block[3]._ , (err, result)=>{
-                  if(err){
-                     return console.log("Ошибка: " + err.message);
-                  }
-                  else{
-                    if(result.length === 0){
-                     
-                    }
-                  }
-                }) */
+                pool.execute('insert into complete_projects(project_name,subject_code) values(\"' + project_name + '\",' + data.batch.page[0].block[3]._ +')' ,(err)=>{
+                  if(err)  return console.log("Ошибка: " + err.message);
+                }); 
 
                 let varMkDir = mkdir(path.join(__dirname, '../memory/', project_name, 
                 '/images/', data.batch.page[0].block[3]._,'/'), {recursive: true });
@@ -124,10 +114,13 @@ let inst = {
           }       
         })
       }
-    //console.log('writing the answers to json ');
-    //fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/list_of_answers.json', JSON.stringify(answers_list));
-    //fs.writeFileSync(path.join(__dirname, '../memory/', project_name) + '/answers.json', JSON.stringify(answers));
-    
+      pool.end(function(err) {
+        if (err) {
+          return console.error(err.message);
+        } else {
+          console.log('pool is closed');
+        }
+      });
      
 
     return true;

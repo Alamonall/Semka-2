@@ -12,9 +12,9 @@ block content
                     div(class='col-sm-6')
                         select(id='prjlst' class="form-control")
                             each project in projects
-                                option(value=project.project)= project.project
+                                option(value=project.project_name)= project.project_name
                             else
-                                option(value='null') null
+                                option(value='null' selected='selected') null
             div(class='form-group row')
                     label(class="col-sm-3 col-form-label") Предмет:
                     div(class='col-sm-6')

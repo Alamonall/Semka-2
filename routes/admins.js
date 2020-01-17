@@ -11,13 +11,6 @@ const connectionString =
 const get_dbs_query = 'select dtb.name from master.sys.databases as dtb where dtb.name like \'%erbd%\''
 const get_users_query = 'SELECT UserName ,UserFIO FROM [TRDB1].[dbo].[useUsers]'
 
-const connection = mysql.createConnection({
-  host: "localhost",
-  user: "admin",
-  database: "ver_db",
-  password: "Adminspassword"
-});
-
 router.get('/admin', (req, res)=>{
     res.render('admin', { title: 'Здесь вы можете проверить верификацию' });
   });
@@ -51,20 +44,31 @@ router.get('/verifycontrol', (req, res)=> {
   Читаем файл с обработанными проектами и предметами, даём их клиенту, 
   чтобы тот смог выбрать, какой проект и предмет он собирается верифицировать
   */
-  connection.query('select project_name from complete_projects', (err,result)=>{
-    if(err){
+ 
+  const pool = mysql.createPool({
+    host: "localhost",
+    user: "admin",
+    database: "ver_db",
+    password: "Adminspassword"
+  });
+
+  pool.execute("select distinct project_name from complete_projects", (err, result)=>{
+    if(err) {
+      console.log(err + " result: " + result);
       res.send("Ошибка в получении проектов").status(500);
-    } else{
-      res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
-          projects: result
-    });
+    } else {
+      pool.execute("select subject_code from complete_projects where project_name = " + result[0], (err, subs)=>{
+        if(err) return console.error(err);
+        else {
+          res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
+          projects: result, subjects: subs});
+        }
+      })
     }
   }); 
-  connection.end((err)=> {
-      if (err) {
-        return console.log("Ошибка: " + err.message);
-        }
-  })
+
+  //pool.end();
+  
   /*sql.query(connectionString,get_dbs_query,(err,rows) =>{
    // console.log(rows);
     if(err) 
@@ -77,7 +81,7 @@ router.get('/verifycontrol', (req, res)=> {
 router.post('/verifycontrol/get/subjects', (req,res)=>{
   try{
     console.log('post /get subjects by admin: ' +  req.body.project_value);
-    connection.query("select subject_code from complete_projects where project_name = " + req.body.project_value, (err,result)=>{
+    pool.query("select subject_code from complete_projects where project_name = " + req.body.project_value, (err,result)=>{
       if(!err){
         res.status(200).send(result);
       }
