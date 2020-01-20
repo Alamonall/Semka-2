@@ -91,9 +91,10 @@ let inst = {
                   вставка данных в бд об обрезанном изображении
                 */
                 let sql = "insert into answers(`status`, `onhand`, `value`, `cropped_image`, `original_image`, `subject_code`, `project_name`)" 
-                  +' values( ' + 0 +','+ 0 +',\"'+ data.batch.page[0].block[i]._ + '\",\"' + path.join( '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ + '_' +
-                  path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png' +'\",\"'+
-                   item + '.TIF' + '\",'+ data.batch.page[0].block[3]._ + ',\"' + project_name + '\")';
+                  +' values( ' + 0 +','+ 0 +',\"'+ data.batch.page[0].block[i]._ + '\",\"' + 
+                  '\\memory\\' + project_name+ '\\images\\'+ data.batch.page[0].block[3]._+ '\\' + data.batch.page[0].block[3]._ + '_' +
+                  path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png' 
+                  +'\",\"'+ item + '.TIF' + '\",'+ data.batch.page[0].block[3]._ + ',\"' + project_name + '\")';
                 
                 pool.execute(sql,(err)=>{
                       if(err) 
@@ -114,13 +115,14 @@ let inst = {
           }       
         })
       }
+      /*
       pool.end(function(err) {
         if (err) {
           return console.error(err.message);
         } else {
           console.log('pool is closed');
         }
-      });
+      });*/
      
 
     return true;

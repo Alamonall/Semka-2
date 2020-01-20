@@ -20,13 +20,14 @@ block content
                     div(class='col-sm-6')
                         select(id='sbjlst' class="form-control")
                             each subject in subjects
-                                option(value=subject)= subject
+                                option(value=subject.subject_code)= subject.subject_code
                             else
                                 option(value='null') null
-            table(class='table table-bordered')
+            table(id='tbl' class='table table-striped')
                 tbody
                 tr
-                td Test1
+                    each img in imgs
+                        td= img.value + '('+ img.count + ')'
             button(type="submit" class='btn btn-primary') Проверить
         script.
            $(document).ready(function(){
@@ -38,7 +39,8 @@ block content
                         success: (data)=>{
                             $("#sbjlst").empty(); 
                             $.each(data, function(key, value) { 
-                                $('#sbjlst').append(new Option(value, key))
+                                //console.log("key = " + key + "; val = " + JSON.stringify(value.subject_code));
+                                $('#sbjlst').append(new Option(JSON.stringify(value.subject_code), key))
                             })   
                         },
                         error: ()=>{
@@ -53,13 +55,27 @@ block content
                        //data: 'subject_value=' + $("select#sbjlst").val() + '&project_value=' + $("select#prjlst").val(),
                         data: {
                             'subject_value' :$("select#sbjlst").val(),
-                         'project_value' : $("select#prjlst").val()
+                            'project_value' : $("select#prjlst").val()
                          },
                         success: (data)=>{
-                            console.log('it all good!')
+                            console.log('data.length=' + data);
+                           /* var number_of_rows = data;
+                            var number_of_cols = 10;
+                            var table_body = 'table(border="1")';
+                            for(var i=0;i<number_of_rows;i++){
+                                table_body+='tr';
+                                for(var j=0;j<number_of_cols;j++){
+                                    table_body +='td';
+                                    table_body +=data.;
+                                    table_body +='</td>';
+                                }
+                                table_body+='</tr>';
+                            }
+                                table_body+='</table>';
+                            $('#tableDiv').html(table_body);    */                    
                         },
-                        error: ()=>{
-                            console.log('Шо то не так( ' + document.getElementById('prjlst').value)
+                        error: (err)=>{
+                            console.log('Шо то не так( ' + err);
                         }
 
                    })
