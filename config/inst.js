@@ -160,3 +160,21 @@ function readFileSync_encoding(filename,enc){
 }
 
 module.exports = inst;
+/*CREATE TABLE IF NOT EXISTS `ver_db`.`answers` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `value` VARCHAR(45) NOT NULL,
+  `status` INT NOT NULL,
+  `onhand` INT NOT NULL,
+  `cropped_image` VARCHAR(200) NOT NULL,
+  `original_image` VARCHAR(200) NOT NULL,
+  `subject_code` INT NOT NULL,
+  `project_name` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+
+CREATE TABLE IF NOT EXISTS `ver_db`.`complete_projects` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `project_name` VARCHAR(45) NOT NULL,
+  `subject_code` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB*/
