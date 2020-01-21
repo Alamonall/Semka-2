@@ -52,18 +52,18 @@ router.get('/verifycontrol', (req, res)=> {
     password: "Adminspassword"
   });
 
-  pool.execute("select distinct project_name from complete_projects", (err, result)=>{
+  pool.execute("select distinct project_name from complete_projects", (err, prject)=>{
     if(err) {
-      console.log(err + " result: " + result);
+      console.log(err + " result: " + prject);
       res.send("Ошибка в получении проектов: " + err).status(500);
     } else {
-      pool.execute("select subject_code from complete_projects where project_name = " + '\''+result[0].project_name+'\'', (err, subs)=>{
+      pool.execute("select subject_code from complete_projects where project_name = " + '\''+prject[0].project_name+'\'', (err, subs)=>{
         if(err) return console.error(err);
         else {
           pool.execute("select answers.value as value ,count(answers.value) as count from answers where subject_code = " + subs[0].subject_code+ " group by(answers.value)", (err, imgs)=>{
             if(!err){
               res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
-                projects: result, subjects: subs, imgs: imgs});
+                projects: prject, subjects: subs, imgs: imgs});
             }
           })          
         }
@@ -98,23 +98,31 @@ router.post('/verifycontrol/get/subjects', (req,res)=>{
 
 router.post('/verifycontrol/get/images', (req,res)=>{
   try{
+    const pool = mysql.createPool({
+      host: "localhost",
+      user: "admin",
+      database: "ver_db",
+      password: "Adminspassword"
+    });
+
     console.log('post /get images by admin: ' +  req.body.subject_value + ', ' + req.body.project_value);
-    pool.execute("select answers.value as value ,count(answers.value) as count from answers where project_name = \""+ req.body.project_value +"\" and subject_code = " +  req.body.subject_value + " group by(answers.value)", (err, imgs)=>{
+    pool.execute("select answers.value as value, count(answers.value) as count from answers where project_name = \""+ req.body.project_value +"\" and subject_code = " +  req.body.subject_value + " group by(answers.value)", (err, imgs)=>{
       if(!err){
-        console.log(imgs);
+        //console.log(imgs);
         res.status(200).send(imgs);
       } else{
         console.error('Ошибка: ' + err);
+        res.status(500);
       }
     })
   } catch(err){
-    throw err;
+    console.error('Ошибка: ' + err);
   }
 });
 
 //временное решение
 let temp_user_list_rows = ({UserFIO: 'a'},{UserName:'b'});
-router.get('/user_list', (req, res, next)=> {
+router.get('/user_list', (req, res)=> {
   //временное решение
   res.render('user_list', { title: 'Список пользователей', users: temp_user_list_rows});
   /*sql.query(connectionString,get_users_query,(err,rows) =s>{
@@ -123,5 +131,9 @@ router.get('/user_list', (req, res, next)=> {
     users: rows});
     })*/
 });
+
+router.get('/onhand', (req,res)=>{
+  res.render('onhand');
+})
 
 module.exports = router;
