@@ -61,9 +61,9 @@ router.get('/verifycontrol', (req, res)=> {
         if(err) return console.error(err);
         else {
           pool.execute("select answers.value as value ,count(answers.value) as count from answers where subject_code = " + subs[0].subject_code+ " group by(answers.value)", (err, imgs)=>{
-            if(!err){
-              res.render('verifycontrol', { title: 'А здесь можно провести контроль верификации',
-                projects: prject, subjects: subs, imgs: imgs});
+            if(!err){             
+              res.render('verifycontrol', { projects: prject, subjects: subs, imgs: JSON.stringify(imgs)});
+              //res.status(200).send({projects: prject, subjects: subs, imgs: imgs});
             }
           })          
         }

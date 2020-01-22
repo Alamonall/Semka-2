@@ -4,7 +4,7 @@ include menu-partial
 
 block content   
         +admin-list
-        h3= title
+        h3 Контроль верификации
         div(class='container-fluid')
          form(name='projects' )
             div(class='form-group row')
@@ -21,16 +21,22 @@ block content
                         select(id='sbjlst' class="form-control")
                             each subject in subjects
                                 option(value=subject.subject_code)= subject.subject_code 
-            div(id='forTable')
-                table(id='table' class='table table-striped')
-                    tbody(id='tbody')
-                    tr
-                        each img in imgs
-                            td= img.value + '('+ img.count + ')'
-            button(type="submit" class='btn btn-primary') Проверить
+                            else
+                                option(value='null' selected='selected') null
+            div(id='forTable') 
+            button(id="goToVerifyButton" type="submit"  class='btn btn-primary') Проверить
         script.
            $(document).ready(function(){  
-               $('#sbjlst').change(()=>{
+                functions.setTable(!{imgs});
+                /*$('#goToVerifyButton').submit((ev)=>{
+                    ev.preventDefault();
+                    $.ajax({
+                        type: 'get',
+                        url:'/admin/onhand',
+                        data: ,
+                    })
+                })*/
+                $('#sbjlst').change(()=>{
                     functions.getImages();
                 }); 
                 $("#prjlst").change(function(){ 
@@ -38,8 +44,7 @@ block content
                     console.log('$("select#sbjlst").val():' + $("select#sbjlst").val());                    
                });
                $('td').on('click', ()=>{
-                   console.log('scream');
-                  $(this).css('color', 'red');
+                  $(this).css('background-color', 'black');
                })
            })
 
@@ -53,37 +58,7 @@ block content
                             'project_value' : $("select#prjlst").val()
                          },
                         success: (data)=>{
-                            console.log('data.length=' + data.length);
-                            let numOfRows = 0, numOfCols = 10;
-                            if(data.length%10 > 0){
-                                numOfRows = Math.floor(data.length/10) + 1;
-                                console.log('rows: ' + numOfRows);
-                            } else {
-                                console.log('acid rocket')
-                                numOfRows = Math.floor(data.length/10);
-                            }       
-                            $('#tbody').remove();
-                            let table_body = '<table id="table" border="1" class="table table-striped"><tbody id="tbody">';
-                            for(let i=0;i<numOfRows;i++){
-                                table_body+='<tr>';
-                                //console.log("rows it: " + i + 'and ' + Math.floor(data.length/10));
-                                //проверка на не полные столбы
-                                if(i == Math.floor(data.length/10)){ 
-                                    numOfCols = data.length%10;
-                                    //console.log("numcOfCols: " +numOfCols);
-                                }
-                                for(let j=0;j<numOfCols;j++){
-                                    table_body +='<td>';
-                                    //console.log(" numOfCols j: " + numOfCols + ' and ' + j);
-                                    table_body +='<input type="checkbox">';
-                                    table_body +=data[+(''+i+j)].value + '('+JSON.stringify(data[+(''+i+j)].count)+ ')';
-                                    table_body +='</input>';
-                                    table_body +='</td>';
-                                }
-                                table_body+='</tr>';
-                            }
-                            table_body+='</tbody></table>'
-                            $('#forTable').html(table_body);                       
+                            functions.setTable(data);
                         },
                         error: (err)=>{
                             console.log('Шо то не так( ' + err);
@@ -104,13 +79,9 @@ block content
                             })
                             select += '</select>';                           
                             $('#forSelectSbjs').html(select);
-                             $('#sbjlst').bind('change',()=>{ 
-                                  functions.getImages();});
-                            /*$("#sbjlst").empty(); 
-                            $.each(data, function(key, value) { 
-                                //console.log("key = " + key + "; val = " + JSON.stringify(value.subject_code));
-                                $('#sbjlst').append(new Option(JSON.stringify(value.subject_code), key))
-                            })*/   
+                            $('#sbjlst').bind('change',()=>{ 
+                                  functions.getImages();
+                                }); 
                             //чтобы при смене предмета запускаласт функция с обновлением изображений
                             functions.getImages(); 
                         },
@@ -118,6 +89,40 @@ block content
                             alert('Шо то не так( ' + document.getElementById('prjlst').value)
                         }
                     });
+               },
+
+               setTable: (data)=>{
+                   console.log('data.length=' + data.length);
+                            let numOfRows = 0, numOfCols = 10;
+                            if(data.length%10 > 0){
+                                numOfRows = Math.floor(data.length/10) + 1;
+                                console.log('rows: ' + numOfRows);
+                            } else {
+                                console.log('acid rocket')
+                                numOfRows = Math.floor(data.length/10);
+                            }       
+                            $('#tbody').remove();
+                            let table_body = '<table id="table" class="table table-striped table-dark"><tbody id="tbody">';
+                            for(let i=0;i<numOfRows;i++){
+                                table_body+='<tr>';
+                                //console.log("rows it: " + i + 'and ' + Math.floor(data.length/10));
+                                //проверка на не полные столбы
+                                if(i == Math.floor(data.length/10)){ 
+                                    numOfCols = data.length%10;
+                                    //console.log("numcOfCols: " +numOfCols);
+                                }
+                                for(let j=0;j<numOfCols;j++){
+                                    table_body +='<td>';
+                                    //console.log(" numOfCols j: " + numOfCols + ' and ' + j);
+                                    table_body +='<input type="checkbox">';
+                                    table_body +=data[+(''+i+j)].value + '('+JSON.stringify(data[+(''+i+j)].count)+ ')';
+                                    table_body +='</input>';
+                                    table_body +='</td>';
+                                }
+                                table_body+='</tr>';
+                            }
+                            table_body+='</tbody></table>'
+                            $('#forTable').html(table_body);  
                }
            }
             

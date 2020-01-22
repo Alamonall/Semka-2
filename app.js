@@ -8,9 +8,9 @@ let flash = require('connect-flash');
 let bodyParser = require('body-parser');
 //let sharp = require('sharp');
 
-var adminsRouter = require('./routes/admins');
-var usersRouter = require('./routes/users');
-//let passport = require('./config/passport');
+let adminsRouter = require('./routes/admins');
+let usersRouter = require('./routes/users');
+let passport = require('./config/passport');
 
 var app = express();
 
@@ -41,8 +41,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/admin/', adminsRouter);
 app.use('/user/', usersRouter);
 
-/*app.use(passport.initialize());
-app.use(passport.session());*/
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(flash());
 
 app.get('/', function(req, res) { 
@@ -55,10 +55,10 @@ app.get('/', function(req, res) {
   res.render('index', { title: 'Есть? А Если найду?' });
 });
 
-app.post('/welcome', /*passport.authenticate('local',{
+app.post('/welcome', passport.authenticate('local',{
   failureRedirect: '/',
   failureFlash: true
-}),*/(req,res)=>{
+}),(req,res)=>{
     req.flash('info','im in');
     res.render('welcome');
  });
