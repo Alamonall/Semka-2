@@ -22,7 +22,7 @@ router.get('/settings', (req, res)=>{
   inst.dirTree('.\\projects');
   res.render('settings', { title: 'Здесь можно настроить всё',
     prs: inst.dirTree('.\\projects') });  
-});
+});0.
 
 router.post('/settings',(req,res)=>{
   //при запуске запустить прогрессбар для резки проекта

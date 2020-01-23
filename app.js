@@ -10,7 +10,8 @@ let bodyParser = require('body-parser');
 
 let adminsRouter = require('./routes/admins');
 let usersRouter = require('./routes/users');
-let passport = require('./config/passport');
+let passport = require('passport');
+require('./config/passport')(passport);
 
 var app = express();
 
@@ -45,17 +46,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
-app.get('/', function(req, res) { 
-  /*sharp('./in.tiff')
-    .resize(250,350)
-    .toFile('./out.png',(err,info)=>{
-      if(err) console.log(err);
-    });*/
-  
+app.get('/', (req, res)=> { 
   res.render('index', { title: 'Есть? А Если найду?' });
 });
 
-app.post('/welcome', passport.authenticate('local',{
+app.post('/welcome', passport.authenticate('local-login',{
   failureRedirect: '/',
   failureFlash: true
 }),(req,res)=>{
@@ -69,7 +64,7 @@ app.use((req, res, next) =>{
 });
 
 // error handler Важно держать в самом низу, иначе поймаёт всё, что не нужно!
-app.use(function(err, req, res, next) {
+app.use((err, req, res, next)=> {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
