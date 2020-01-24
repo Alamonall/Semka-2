@@ -20,6 +20,12 @@ h3 a {
       min-width: 200px;
 }
 
+button#logout{
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
 .menu-main {
   list-style: none;
   margin: 40px 0 5px;

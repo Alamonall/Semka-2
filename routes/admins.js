@@ -5,11 +5,19 @@ let path = require('path');
 let fs = require('fs');
 let inst = require('../config/inst.js');
 let mysql = require("mysql2");
+const passport = require('passport');
+//require('./config/passport')(passport);
+
+const authenticate = passport.authenticate('local-login', {session: true});
 
 const connectionString = 
 'Driver=SQL Server Native Client 11.0;DSN=SQLNative DSN;SERVER=erbd38;Database=erbd_ege_reg_19_38;Trusted_Connection=yes;';
 const get_dbs_query = 'select dtb.name from master.sys.databases as dtb where dtb.name like \'%erbd%\''
 const get_users_query = 'SELECT UserName ,UserFIO FROM [TRDB1].[dbo].[useUsers]'
+
+router.all('/admin/*', authenticate, (req,res,next)=>{
+  next();
+});
 
 router.get('/admin', (req, res)=>{
     res.render('admin', { title: 'Здесь вы можете проверить верификацию' });
@@ -75,7 +83,11 @@ router.get('/verifycontrol', (req, res)=> {
   
 });
 
-router.post('/verifycontrol/get/subjects', (req,res)=>{
+router.post('/verifycontrol/setAnswers',(req,res)=>{
+  res.send('get it');  
+});
+
+router.post('/verifycontrol/getSubjects', (req,res)=>{
   try{
     const pool = mysql.createPool({
       host: "localhost",
@@ -96,7 +108,7 @@ router.post('/verifycontrol/get/subjects', (req,res)=>{
 });
 
 
-router.post('/verifycontrol/get/images', (req,res)=>{
+router.post('/verifycontrol/getImages', (req,res)=>{
   try{
     const pool = mysql.createPool({
       host: "localhost",
@@ -132,8 +144,23 @@ router.get('/user_list', (req, res)=> {
     })*/
 });
 
-router.get('/onhand', (req,res)=>{
-  res.render('onhand');
+router.get('/verifycontrol/onhand', (req,res)=>{
+  console.log('getting onhand control ' + JSON.stringify(req.body.data["values"]));
+  /*pool.execute('select * from answers where value in (' + req.body.values + ') where project_name = ' + req.body.project, (err,rows)=>{
+
+  });*/
+  res.status(200).send('тут надо портянку с изображениями');
 })
+
+router.post('/onhand', (req,res)=>{
+
+})
+
+function mustAuthenticated(req, res, next) {
+  if (!req.isAuthenticated()) {
+    return res.status(HTTPStatus.UNAUTHORIZED).send({});
+  }
+  next();
+}
 
 module.exports = router;

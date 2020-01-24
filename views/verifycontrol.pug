@@ -5,37 +5,58 @@ include menu-partial
 block content   
         +admin-list
         h3 Контроль верификации
-        div(class='container-fluid')
-         form(name='projects' )
-            div(class='form-group row')
-                    label(class="col-sm-3 col-form-label") Проекты:
-                    div(class='col-sm-6')
-                        select(id='prjlst' class="form-control")
-                            each project in projects
-                                option(value=project.project_name)= project.project_name
-                            else
-                                option(value='null' selected='selected') null
-            div(class='form-group row')
-                    label(class="col-sm-3 col-form-label") Предмет:
-                    div(id='forSelectSbjs' class='col-sm-6')
-                        select(id='sbjlst' class="form-control")
-                            each subject in subjects
-                                option(value=subject.subject_code)= subject.subject_code 
-                            else
-                                option(value='null' selected='selected') null
-            div(id='forTable') 
-            button(id="goToVerifyButton" type="submit"  class='btn btn-primary') Проверить
+        div(id='forData' class='container-fluid')
+            form(name='projects' action='/admin/verifycontrol/onhand' method='get' )
+                div(class='form-group row')
+                        label(class="col-sm-3 col-form-label") Проекты:
+                        div(class='col-sm-6')
+                            select(id='prjlst' class="form-control")
+                                each project in projects
+                                    option(value=project.project_name)= project.project_name
+                                else
+                                    option(value='null' selected='selected') null
+                div(class='form-group row')
+                        label(class="col-sm-3 col-form-label") Предмет:
+                        div(id='forSelectSbjs' class='col-sm-6')
+                            select(id='sbjlst' class="form-control")
+                                each subject in subjects
+                                    option(value=subject.subject_code)= subject.subject_code 
+                                else
+                                    option(value='null' selected='selected') null
+                div(id='forTable' class='container-fluid') 
+            form(action='/admin/verifycontrol/onhand' method='get' )
+                button(id="goToVerifyButton" type="submit"  class='btn btn-primary') Проверить
         script.
            $(document).ready(function(){  
-                functions.setTable(!{imgs});
-                /*$('#goToVerifyButton').submit((ev)=>{
-                    ev.preventDefault();
-                    $.ajax({
-                        type: 'get',
-                        url:'/admin/onhand',
-                        data: ,
-                    })
-                })*/
+                $('#goToVerifyButton').click((e)=>{
+                    e.preventDefault();
+                    let values = $("input[type=\'checkbox\']:checked");
+                        if(values.length){
+                            let data = new Object();
+                            data.values = new Object();
+                            data.project = $('#prjlst').val();
+                            for(i = 0; i < values.length;i++){
+                                data["values"][i] = $('#'+values[i].id).val();
+                            }
+                            localStorage.setItem('data', data);
+                            $.ajax({
+                                url: '/admin/verifycontrol/onhand',
+                                data: data,
+                                success: (data, status)=>{
+                                    if(status == 200)
+                                        $('#forData').html('<p>' + data + '</p>');
+                                    if(status == 500)
+                                        alert('Status 500: ' + status);
+                                },
+                                error: (err)=>{
+                                    alert('something goes wrong: ' + err);
+                                }
+                            })
+                        } else {
+                            alert('Не выбраны данные для проверки');
+                        }
+                   
+                })
                 $('#sbjlst').change(()=>{
                     functions.getImages();
                 }); 
@@ -52,7 +73,7 @@ block content
                getImages: ()=>{
                    $.ajax({
                         type: 'post',
-                        url: '/admin/verifycontrol/get/images',
+                        url: '/admin/verifycontrol/getImages',
                         data: {
                             'subject_value' : $("select#sbjlst").val(),
                             'project_value' : $("select#prjlst").val()
@@ -69,7 +90,7 @@ block content
                getSubjects: ()=>{
                    $.ajax({ 
                         type: 'post',
-                        url: '/admin/verifycontrol/get/subjects',
+                        url: '/admin/verifycontrol/getSubjects',
                         data: 'project_value=' + $("select#prjlst").val(),
                         success: (data)=>{
                             $("#sbjlst").remove();
@@ -112,9 +133,9 @@ block content
                                     //console.log("numcOfCols: " +numOfCols);
                                 }
                                 for(let j=0;j<numOfCols;j++){
-                                    table_body +='<td>';
+                                    table_body +='<td value =\''+ data[+(''+i+j)].value +'\'>';
                                     //console.log(" numOfCols j: " + numOfCols + ' and ' + j);
-                                    table_body +='<input type="checkbox">';
+                                    table_body +='<input id=\'' + (''+i+j) +'\'type=\'checkbox\'>';
                                     table_body +=data[+(''+i+j)].value + '('+JSON.stringify(data[+(''+i+j)].count)+ ')';
                                     table_body +='</input>';
                                     table_body +='</td>';
