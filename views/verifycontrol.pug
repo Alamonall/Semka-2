@@ -35,21 +35,30 @@ block content
                             let data = new Object();
                             data.values = new Object();
                             data.project = $('#prjlst').val();
+                            data.subject = $('#sbjlst').val();
                             for(i = 0; i < values.length;i++){
-                                data["values"][i] = $('#'+values[i].id).val();
+                                data.values[i] = $('#'+values[i].id).val();
                             }
                             localStorage.setItem('data', data);
                             $.ajax({
+                                type: 'post',
                                 url: '/admin/verifycontrol/onhand',
                                 data: data,
-                                success: (data, status)=>{
-                                    if(status == 200)
-                                        $('#forData').html('<p>' + data + '</p>');
-                                    if(status == 500)
-                                        alert('Status 500: ' + status);
+                                dataType: 'json',
+                                success: (data)=>{
+                                    console.log('data l: ' + data.length);                                    
+                                    let hand = '<ul class="list-unstyled">';
+                                    for( i = 0; i < data.length; i++){
+                                        console.log('path2: ' + decodeURI(data[i].cropped_image));
+                                        hand += '<li style=" font-size: 2em"  id=\'' + i + '\' value=\'' + data[i].value + '\'>';
+                                        hand += data[i].value + '<img src =\'..' + data[i].cropped_image+'\' class="img-fluid" alt="Что-то не так с изображением">';
+                                        hand += '</img></li>';
+                                    }
+                                    hand+= '</ul>';
+                                    $('#forData').html(hand);
                                 },
                                 error: (err)=>{
-                                    alert('something goes wrong: ' + err);
+                                    alert('something goes wrong ' + err);
                                 }
                             })
                         } else {
@@ -135,7 +144,7 @@ block content
                                 for(let j=0;j<numOfCols;j++){
                                     table_body +='<td value =\''+ data[+(''+i+j)].value +'\'>';
                                     //console.log(" numOfCols j: " + numOfCols + ' and ' + j);
-                                    table_body +='<input id=\'' + (''+i+j) +'\'type=\'checkbox\'>';
+                                    table_body +='<input id=\'' + (''+i+j) +'\'type=\'checkbox\' value=\''+ data[+(''+i+j)].value+ '\'>';
                                     table_body +=data[+(''+i+j)].value + '('+JSON.stringify(data[+(''+i+j)].count)+ ')';
                                     table_body +='</input>';
                                     table_body +='</td>';

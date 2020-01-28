@@ -15,6 +15,13 @@ const connectionString =
 const get_dbs_query = 'select dtb.name from master.sys.databases as dtb where dtb.name like \'%erbd%\''
 const get_users_query = 'SELECT UserName ,UserFIO FROM [TRDB1].[dbo].[useUsers]'
 
+const pool = mysql.createPool({
+  host: "localhost",
+  user: "admin",
+  database: "ver_db",
+  password: "Adminspassword"
+});
+
 router.all('/admin/*', authenticate, (req,res,next)=>{
   next();
 });
@@ -52,14 +59,6 @@ router.get('/verifycontrol', (req, res)=> {
   Читаем файл с обработанными проектами и предметами, даём их клиенту, 
   чтобы тот смог выбрать, какой проект и предмет он собирается верифицировать
   */
- 
-  const pool = mysql.createPool({
-    host: "localhost",
-    user: "admin",
-    database: "ver_db",
-    password: "Adminspassword"
-  });
-
   pool.execute("select distinct project_name from complete_projects", (err, prject)=>{
     if(err) {
       console.log(err + " result: " + prject);
@@ -89,13 +88,6 @@ router.post('/verifycontrol/setAnswers',(req,res)=>{
 
 router.post('/verifycontrol/getSubjects', (req,res)=>{
   try{
-    const pool = mysql.createPool({
-      host: "localhost",
-      user: "admin",
-      database: "ver_db",
-      password: "Adminspassword"
-    });
-
     console.log('post /get subjects by admin: ' +  req.body.project_value);
     pool.execute("select subject_code from complete_projects where project_name = \"" + req.body.project_value + "\"", (err,result)=>{
       if(!err){
@@ -110,13 +102,6 @@ router.post('/verifycontrol/getSubjects', (req,res)=>{
 
 router.post('/verifycontrol/getImages', (req,res)=>{
   try{
-    const pool = mysql.createPool({
-      host: "localhost",
-      user: "admin",
-      database: "ver_db",
-      password: "Adminspassword"
-    });
-
     console.log('post /get images by admin: ' +  req.body.subject_value + ', ' + req.body.project_value);
     pool.execute("select answers.value as value, count(answers.value) as count from answers where project_name = \""+ req.body.project_value +"\" and subject_code = " +  req.body.subject_value + " group by(answers.value)", (err, imgs)=>{
       if(!err){
@@ -144,17 +129,34 @@ router.get('/user_list', (req, res)=> {
     })*/
 });
 
-router.get('/verifycontrol/onhand', (req,res)=>{
-  console.log('getting onhand control ' + JSON.stringify(req.body.data["values"]));
-  /*pool.execute('select * from answers where value in (' + req.body.values + ') where project_name = ' + req.body.project, (err,rows)=>{
+router.post('/verifycontrol/onhand', (req,res)=>{
+    let str_vals = JSON.stringify(req.body.values).substring(1,JSON.stringify(req.body.values).length -1);
+    console.log('post onhand ' + str_vals + 'pr: '+ req.body.project + ' sb: ' + req.body.subject);
+    let values = [];
 
-  });*/
-  res.status(200).send('тут надо портянку с изображениями');
-})
-
-router.post('/onhand', (req,res)=>{
-
-})
+    pool.execute('select * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject, (err,rows)=>{
+      if(err){
+        console.log('err: ' + err);
+        res.status(500).send(err);
+      } else {
+        console.log('rows: ' + JSON.stringify(rows));
+        res.status(200).send(rows);
+      }
+    })
+    /*for(i = 0; i < req.body.values.length;i++){
+      console.log('req.body.values[i]: ' + req.body.values[i] +'; pr: ' +  req.body.project + '; sb: ' + req.body.subject);
+      pool.execute('select * from answers where value in ( \'' + req.body.values[i] + '\') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject, (err,rows)=>{
+        if(err){
+          console.log('err: ' + err);
+          res.status(500).send(err);
+        } else {
+          console.log('rows: ' + JSON.stringify(rows) + '; req.body.values[i]: ' + req.body.values[i]);
+          values.push(JSON.stringify(rows));
+        }
+    })
+  }*/
+  console.log('values: ' + values);
+});
 
 function mustAuthenticated(req, res, next) {
   if (!req.isAuthenticated()) {
