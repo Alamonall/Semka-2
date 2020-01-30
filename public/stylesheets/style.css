@@ -20,7 +20,7 @@ h3 a {
       min-width: 200px;
 }
 
-button#logout{
+form#logout{
   position: absolute;
   top: 0;
   right: 0;
@@ -78,3 +78,7 @@ button#logout{
   margin: 0 30px;
 }
 }
+#verifyControlTable td{
+  height:auto;
+}
+ 

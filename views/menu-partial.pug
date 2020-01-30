@@ -8,7 +8,19 @@ mixin admin-list
             a(href='/admin/verifycontrol') Контроль верификации
         li
             a(href='/admin/user_list') Список пользователей
+    form(id='logout' action='logout' method='get')
+        div
+            p User
+            p Privilieges
+        div
+            button( type="submit" class="btn btn-danger" ) Выход
 mixin user-list
     ul(class='menu-main')
         li
             a(href='/user/verifycontrol') Контроль верификации
+    form(id='logout' action='logout' method='get')
+        div
+            p User
+            p Privilieges
+        div
+            button(type="submit" class="btn btn-danger" ) Выход

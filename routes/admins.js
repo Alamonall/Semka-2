@@ -156,13 +156,6 @@ router.post('/verifycontrol/onhand', (req,res)=>{
     })
   }*/
   console.log('values: ' + values);
-});
-
-function mustAuthenticated(req, res, next) {
-  if (!req.isAuthenticated()) {
-    return res.status(HTTPStatus.UNAUTHORIZED).send({});
-  }
-  next();
-}
+}); 
 
 module.exports = router;

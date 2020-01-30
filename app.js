@@ -46,16 +46,16 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
-app.get('/', (req, res)=> { 
-  res.render('index', { title: 'Есть? А Если найду?' });
+app.get('/', mustAuthenticated, (req, res)=> { 
+  res.render('welcome', {user: req.user.username});
 });
 
-app.get('/logout', (req,res)=>{
+app.get('*/logout', (req,res)=>{
   req.logout();
   res.redirect('/');
 })
 
-app.post('/welcome', passport.authenticate('local-login',{
+app.post('/', passport.authenticate('local-login',{
   failureRedirect: '/',
   failureFlash: true
 }),(req,res)=>{ 
@@ -77,5 +77,12 @@ app.use((err, req, res, next)=> {
   res.status(err.status || 500);
   res.render('error');
 });
+
+function mustAuthenticated(req, res, next) {
+  if (!req.isAuthenticated()) {
+    return res.render('index');
+  }
+  next();
+}
 
 module.exports = app;
