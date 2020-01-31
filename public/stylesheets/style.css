@@ -79,6 +79,7 @@ form#logout{
 }
 }
 #verifyControlTable td{
-  height:auto;
+  width: 105px;
+  /*table-layout: fixed;*/
 }
  

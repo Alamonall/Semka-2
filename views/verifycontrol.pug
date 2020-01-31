@@ -27,7 +27,29 @@ block content
             form(action='/admin/verifycontrol/onhand')
                 button(id="goToVerifyButton" type="submit"  class='btn btn-primary') Проверить
         script.
-           $(document).ready(function(){  
+           $(document).ready(function(){   
+               $( window ).on('unload', function() {
+                    console.log("Handler for .unload() called.");
+                    });
+
+               $('#sendResult').click(function(e){
+                    e.preventDefault();
+                    let resultOfVerifyControl = $("td[class=\'img\']");
+                    let data = new Object();
+                    data.id = $("td[class=\'img\']").attr('id');
+                    data.status = $("td[class=\'img\']").attr('status');
+                    $.ajax({
+                        type: 'post',
+                        url: '/admin/verifycontrol/sendResult',
+                        data: data,
+                        dataType: 'json',   
+                        success: function(data){
+                            
+                        },
+                        error: function(info){}
+                    });
+                });
+
                 $('#goToVerifyButton').click(function(e){
                     e.preventDefault();
                     let values = $("input[type=\'checkbox\']:checked");
@@ -85,19 +107,38 @@ block content
                                         darktable +='<tbody>';
                                     for( i = 0; i < data.length; i++){
                                         darktable += '<tr height="110"><th scrope="row">' + data[i].value + '</th>';
-                                        darktable += '<td><img src=\'' + data[i].cropped_image + '\' alt=\'Изображение со значением: '+ data[i].value +  '\' height="92" width="1071"/>';
+                                        darktable += '<td class="img" status="0" id=\'' + data[i].id + '\'><img src=\'' + data[i].cropped_image + '\' alt=\'Изображение со значением: '+ data[i].value +  '\' height="92" width="1071"/>';
                                         darktable += '</td>';
                                         darktable += '<td><ul class="list-unstyled">';
                                         darktable += '<li>' + data[i].task + '</li>'
-                                        darktable += '<li>' + 'ФИО верификатора' + '</li>'
-                                        darktable += '<li>' + 'Никнейм верификатора' + '</li>'
+                                        darktable += '<li>' + 'ФИО:' + '</li>'
+                                        darktable += '<li>' + 'Никнейм:' + '</li>'
                                         darktable += '<li><a href="' + data[i].original_image +'">Ссылка на бланк</a></li>'
                                          '</ul></td>'
                                         darktable += '</tr>';
 
                                     }
                                     darktable += '</tbody></table>'
+                                    darktable += '<div><button id="sendResult" type="submit"  class="btn btn-primary">Отправить</button></div>'
+                                    
                                     $('#forData').html(darktable);
+                                    $('#forData').bind('change', function(){
+                                        alert('Что-то изменилось в твоей изни');
+                                    })
+                                    $('#verifyControlTable td.img').bind('click', function(){ 
+                                        if($(this).attr("status") == 0){
+                                            $(this).attr("status", 1);
+                                            $(this).css('background-color', 'blue');
+                                        }
+                                        else if($(this).attr("status") == 1){
+                                            $(this).attr("status", 2);
+                                            $(this).css('background-color', 'red');
+                                        }
+                                        else if($(this).attr("status") == 2){
+                                            $(this).attr("status", 0);
+                                            $(this).css('background-color', 'inherit');
+                                        }
+                                    }); 
                                 },
                                 error: function(err){
                                     alert('something goes wrong ' + err);

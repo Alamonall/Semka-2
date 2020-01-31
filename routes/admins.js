@@ -82,10 +82,6 @@ router.get('/verifycontrol', (req, res)=> {
   
 });
 
-router.post('/verifycontrol/setAnswers',(req,res)=>{
-  res.send('get it');  
-});
-
 router.post('/verifycontrol/getSubjects', (req,res)=>{
   try{
     console.log('post /get subjects by admin: ' +  req.body.project_value);
@@ -133,7 +129,7 @@ router.post('/verifycontrol/onhand', (req,res)=>{
     let str_vals = JSON.stringify(req.body.values).substring(1,JSON.stringify(req.body.values).length -1);
     console.log('post onhand ' + str_vals + 'pr: '+ req.body.project + ' sb: ' + req.body.subject);
     let values = [];
-
+    //получение списка файлов для верификации
     pool.execute('select * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject, (err,rows)=>{
       if(err){
         console.log('err: ' + err);
@@ -141,6 +137,12 @@ router.post('/verifycontrol/onhand', (req,res)=>{
       } else {
         console.log('rows: ' + JSON.stringify(rows));
         res.status(200).send(rows);
+      }
+    });
+    //обновление данных в бд, которые были взяты на контроль
+    pool.execute('update answers set onhand = 1 where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject, (err,rows)=>{
+      if(err){
+        console.log("Произошла ошибка в обновлении данных");
       }
     })
     /*for(i = 0; i < req.body.values.length;i++){
@@ -155,7 +157,16 @@ router.post('/verifycontrol/onhand', (req,res)=>{
         }
     })
   }*/
-  console.log('values: ' + values);
+  //console.log('values: ' + values);
 }); 
+
+router.post('/verifycontrol/sendResult', (req,res)=>{
+  console.log("req.body.result: " + req.body.result);
+  pool.execute('update answers set onhand = 2, status in (\'' + req.body.result + '\') where id in (\''+ req.body.id +'\') ', (err,rows)=>{
+    if(err){
+      console.log("Произошла ошибка в обновлении данных");
+    }
+  })
+})
 
 module.exports = router;
