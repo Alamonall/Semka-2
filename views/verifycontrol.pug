@@ -9,9 +9,9 @@ block content
             form(name='projects' action='/admin/verifycontrol/onhand' method='get' )
                 div(class='form-group row')
                         label(class="col-sm-3 col-form-label") Проекты:
-                        div(class='col-sm-6')
+                        div(id='forProjectList' class='col-sm-6')
                             select(id='prjlst' class="form-control")
-                                each project in projects
+                                each project in !{projects}
                                     option(value=project.project_name)= project.project_name
                                 else
                                     option(value='null' selected='selected') null
@@ -19,7 +19,7 @@ block content
                         label(class="col-sm-3 col-form-label") Предмет:
                         div(id='forSelectSbjs' class='col-sm-6')
                             select(id='sbjlst' class="form-control")
-                                each subject in subjects
+                                each subject in !{subjects}
                                     option(value=subject.subject_code)= subject.subject_code 
                                 else
                                     option(value='null' selected='selected') null
@@ -27,11 +27,15 @@ block content
             form(action='/admin/verifycontrol/onhand')
                 button(id="goToVerifyButton" type="submit"  class='btn btn-primary') Проверить
         script.
-           $(document).ready(function(){   
-               $( window ).on('unload', function() {
-                    console.log("Handler for .unload() called.");
-                    });
-
+           $(document).ready(function(){     
+               $.ajax({
+                   type: 'get',
+                   url: '/admin/verifycontrol',
+                   dataType: 'json',
+                   success: function(data){
+                       
+                   }
+               })            
                $('#sendResult').click(function(e){
                     e.preventDefault();
                     let resultOfVerifyControl = $("td[class=\'img\']");

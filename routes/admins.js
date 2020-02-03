@@ -20,7 +20,7 @@ const pool = mysql.createPool({
   user: "admin",
   database: "ver_db",
   password: "Adminspassword"
-});
+}).promise();
 
 router.all('/admin/*', authenticate, (req,res,next)=>{
   next();
@@ -59,23 +59,30 @@ router.get('/verifycontrol', (req, res)=> {
   Читаем файл с обработанными проектами и предметами, даём их клиенту, 
   чтобы тот смог выбрать, какой проект и предмет он собирается верифицировать
   */
-  pool.execute("select distinct project_name from complete_projects", (err, prject)=>{
-    if(err) {
-      console.log(err + " result: " + prject);
-      res.send("Ошибка в получении проектов: " + err).status(500);
-    } else {
-      pool.execute("select subject_code from complete_projects where project_name = " + '\''+prject[0].project_name+'\'', (err, subs)=>{
-        if(err) return console.error(err);
-        else {
-          pool.execute("select answers.value as value ,count(answers.value) as count from answers where subject_code = " + subs[0].subject_code+ " group by(answers.value)", (err, imgs)=>{
-            if(!err){             
-              res.render('verifycontrol', { projects: prject, subjects: subs, imgs: JSON.stringify(imgs)});
-              //res.status(200).send({projects: prject, subjects: subs, imgs: imgs});
-            }
-          })          
-        }
-      })
-    }
+ /*
+
+ select 
+complete_projects.project_name,
+complete_projects.subject_code,
+answers.value as value,
+count(answers.value)
+from complete_projects
+inner join answers on answers.project_name = complete_projects.project_name and answers.subject_code = complete_projects.subject_code
+group by
+	project_name, subject_code, answers.value
+
+
+  */
+ let sql = "select complete_projects.project_name, complete_projects.subject_code, answers.value as value, count(answers.value) from complete_projects"
+ + " inner join answers on answers.project_name = complete_projects.project_name and answers.subject_code = complete_projects.subject_code"
+ + " group by project_name, subject_code, answers.value";
+  pool.execute(sql)
+    .then(rows=>{
+      console.log("rows: " + rows.length + " rows11: " + JSON.stringify(rows[0]));
+        res.render('verifycontrol', { projects: [], subjects: [], imgs: []});            
+      })          
+  .catch(err=>{
+    res.send("Ошибка в получении проектов: " + err).status(500);
   }); 
 
   //pool.end();
@@ -85,10 +92,12 @@ router.get('/verifycontrol', (req, res)=> {
 router.post('/verifycontrol/getSubjects', (req,res)=>{
   try{
     console.log('post /get subjects by admin: ' +  req.body.project_value);
-    pool.execute("select subject_code from complete_projects where project_name = \"" + req.body.project_value + "\"", (err,result)=>{
-      if(!err){
-          res.status(200).send(result);
-        }
+    pool.execute("select subject_code from complete_projects where project_name = \"" + req.body.project_value + "\"")
+    .then(result=>{
+      res.status(200).send(result);
+    })
+    .catch(err=>{
+      console.log(err);
     }) 
   } catch(err){
       throw err;
@@ -99,14 +108,13 @@ router.post('/verifycontrol/getSubjects', (req,res)=>{
 router.post('/verifycontrol/getImages', (req,res)=>{
   try{
     console.log('post /get images by admin: ' +  req.body.subject_value + ', ' + req.body.project_value);
-    pool.execute("select answers.value as value, count(answers.value) as count from answers where project_name = \""+ req.body.project_value +"\" and subject_code = " +  req.body.subject_value + " group by(answers.value)", (err, imgs)=>{
-      if(!err){
-        //console.log(imgs);
+    pool.execute("select answers.value as value, count(answers.value) as count from answers where project_name = \""+ req.body.project_value +"\" and subject_code = " +  req.body.subject_value + " group by(answers.value)")
+    .then(imgs=>{
         res.status(200).send(imgs);
-      } else{
+    })
+    .catch(err=>{
         console.error('Ошибка: ' + err);
         res.status(500);
-      }
     })
   } catch(err){
     console.error('Ошибка: ' + err);
@@ -130,21 +138,20 @@ router.post('/verifycontrol/onhand', (req,res)=>{
     console.log('post onhand ' + str_vals + 'pr: '+ req.body.project + ' sb: ' + req.body.subject);
     let values = [];
     //получение списка файлов для верификации
-    pool.execute('select * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject, (err,rows)=>{
-      if(err){
-        console.log('err: ' + err);
-        res.status(500).send(err);
-      } else {
+    pool.execute('select * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject)
+      .then(rows=>{
         console.log('rows: ' + JSON.stringify(rows));
-        res.status(200).send(rows);
-      }
-    });
-    //обновление данных в бд, которые были взяты на контроль
-    pool.execute('update answers set onhand = 1 where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject, (err,rows)=>{
-      if(err){
-        console.log("Произошла ошибка в обновлении данных");
-      }
+           //обновление данных в бд, которые были взяты на контроль
+        pool.execute('update answers set onhand = 1 where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject)
+          .then(rows=>{            
+            res.status(200).send(rows);
+          })
+    .catch(err=>{
+      console.log('err: ' + err);
+      res.status(500).send(err);
     })
+  })
+ 
     /*for(i = 0; i < req.body.values.length;i++){
       console.log('req.body.values[i]: ' + req.body.values[i] +'; pr: ' +  req.body.project + '; sb: ' + req.body.subject);
       pool.execute('select * from answers where value in ( \'' + req.body.values[i] + '\') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject, (err,rows)=>{
@@ -162,11 +169,13 @@ router.post('/verifycontrol/onhand', (req,res)=>{
 
 router.post('/verifycontrol/sendResult', (req,res)=>{
   console.log("req.body.result: " + req.body.result);
-  pool.execute('update answers set onhand = 2, status in (\'' + req.body.result + '\') where id in (\''+ req.body.id +'\') ', (err,rows)=>{
-    if(err){
-      console.log("Произошла ошибка в обновлении данных");
-    }
+  pool.execute('update answers set onhand = 2, status in (\'' + req.body.result + '\') where id in (\''+ req.body.id +'\') ')
+  .then(rows=>{
+
   })
+  .catch(err=>{
+    console.log("Произошла ошибка в обновлении данныx : " + err);
+  });
 })
 
 module.exports = router;
