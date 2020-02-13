@@ -1,4 +1,4 @@
-var fs = require('fs');
+let fs = require('graceful-fs')
 let sharp = require('sharp');
 let path = require('path');
 let xml2js = require('xml2js');
@@ -7,7 +7,7 @@ let xmlBuilder = require('xmlbuilder');
 let parser = new xml2js.Parser({ attrkey: "ATTR" });
 const util = require('util');
 const mysql = require("mysql2");
-  
+const async = require("async");
 const stat = util.promisify(fs.stat);
 const readFile = util.promisify(fs.readFile);
 const mkdir = util.promisify(fs.mkdir);
@@ -70,7 +70,33 @@ let inst = {
     }
 
     try{
-   
+      let manys = 0;
+      for(let item of aud_list){
+        //console.log('xml path: '+ item + '.XML');   
+        //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
+        let xml_string = readFileSync_encoding(item + '.XML', 'UTF-16');//.replace(/\?\?/,'');
+        
+        //вытаскиваем из файлов необходимые данные
+        parser.parseString(xml_string, (err,data) => {
+          if(err)
+            console.error('err in parseString : ' + err);
+          else{
+            for(let i = 0; i < 75; i++){ // число 75 взято от бaлды, лучше будет придумать что-нибудь по-надёжнее 
+              let page = data.batch.page[0].block[i];
+              if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' 
+              || page.ATTR.blockName.match(/В\d\d/) === null )){
+                //проверка на существование папки предмета (например 1 - русский) с  ответом или её создание
+                manys++;
+              }
+            }
+          }
+      });
+    }
+    let asyncQueue = async.queue(function(task,callback){
+        imageCrop(task._item,task._data,task._i,task._project_name);
+        callback();
+      },250);
+    console.log('manys: ' + manys);
       for(let item of aud_list){
         //console.log('xml path: '+ item + '.XML');   
         //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
@@ -85,10 +111,10 @@ let inst = {
               let page = data.batch.page[0].block[i];
               if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){
                 //проверка на существование папки предмета (например 1 - русский) с  ответом или её создание
-                
                 /*
                   вставка данных в бд об обрезанном изображении
                 */
+                console.log('progress: ' + manys--);
                 let sql = 'insert into answers(`status`, `onhand`, `value`, `cropped_image`, `original_image`, `subject_code`, `project_name` , `task`)' 
                   +' values(?, ? , ? , ? , ?, ? ,?, ?);'
                 let insterts = [
@@ -103,14 +129,14 @@ let inst = {
                 });
 
                 pool.execute('insert into complete_projects(project_name,subject_code) values(\"' + project_name + '\",' + data.batch.page[0].block[3]._ +')' ,(err)=>{
-                  if(err)  return console.log("Ошибка: " + err.message);
+                  if(err)  {
+                    //return console.log("Ошибка: " + err.message);
+                  }
                 }); 
-
-                let varMkDir = mkdir(path.join(__dirname, '/memory/', project_name, 
-                '/images/', data.batch.page[0].block[3]._,'/'), {recursive: true });
-                varMkDir.then(                   
-                 imageCrop(item, data, i, project_name)
-                );
+                
+                mkdir(path.join(__dirname, '/memory/', project_name,'/images/', data.batch.page[0].block[3]._,'/'), {recursive: true })
+                  .then(
+                      asyncQueue.push( {_item: item, _data: data, _i: i, _project_name: project_name}))
               }
             } 
           }       
@@ -140,13 +166,14 @@ function imageCrop(item, data, i, project_name){
   readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
   .then((inf)=>
       sharp(inf)
-        .extract(
+        .extract(         
           {'left': parseInt(data.batch.page[0].block[i].ATTR.l), 'top': parseInt(data.batch.page[0].block[i].ATTR.t),
           /*width*/'width' : 1071,//parseInt(data.batch.page[0].block[i].ATTR.r - data.batch.page[0].block[i].ATTR.l),
           /*height*/'height': 92,//parseInt(data.batch.page[0].block[i].ATTR.b - data.batch.page[0].block[i].ATTR.t)
         })
         .toFile(path.join(__dirname, '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
         + '_' + path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png')
+
   )
   .catch((err)=>{
     console.log('err in imageCrop[' + i + ']: '+ err);

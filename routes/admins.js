@@ -58,35 +58,17 @@ router.get('/verifycontrol', (req, res)=> {
   /*
   Читаем файл с обработанными проектами и предметами, даём их клиенту, 
   чтобы тот смог выбрать, какой проект и предмет он собирается верифицировать
-  */
- /*
-
- select 
-complete_projects.project_name,
-complete_projects.subject_code,
-answers.value as value,
-count(answers.value)
-from complete_projects
-inner join answers on answers.project_name = complete_projects.project_name and answers.subject_code = complete_projects.subject_code
-group by
-	project_name, subject_code, answers.value
-
-
-  */
- let sql = "select complete_projects.project_name, complete_projects.subject_code, answers.value as value, count(answers.value) from complete_projects"
- + " inner join answers on answers.project_name = complete_projects.project_name and answers.subject_code = complete_projects.subject_code"
- + " group by project_name, subject_code, answers.value";
+  */ 
+  let sql = "select distinct project_name from complete_projects order by 1";
   pool.execute(sql)
     .then(rows=>{
-      console.log("rows: " + rows.length + " rows11: " + JSON.stringify(rows[0]));
-        res.render('verifycontrol', { projects: [], subjects: [], imgs: []});            
-      })          
-  .catch(err=>{
-    res.send("Ошибка в получении проектов: " + err).status(500);
-  }); 
-
+      console.log("rows: " + rows[0].length + " rows11: " + JSON.stringify(rows[0][0].project_name) + " rows2: " + JSON.stringify(rows[0][0]));
+      res.render('verifycontrol', {projects: rows[0]});//, { projects: JSON.stringify(rows[0][0]), subjects: JSON.stringify(rows[0][0]), imgs: JSON.stringify(rows[0][0])});            
+    })          
+    .catch(err=>{
+      res.send("Ошибка в получении проектов: " + err).status(500);
+    }); 
   //pool.end();
-  
 });
 
 router.post('/verifycontrol/getSubjects', (req,res)=>{
@@ -94,7 +76,7 @@ router.post('/verifycontrol/getSubjects', (req,res)=>{
     console.log('post /get subjects by admin: ' +  req.body.project_value);
     pool.execute("select subject_code from complete_projects where project_name = \"" + req.body.project_value + "\"")
     .then(result=>{
-      res.status(200).send(result);
+      res.status(200).send(result[0]);
     })
     .catch(err=>{
       console.log(err);
@@ -108,9 +90,9 @@ router.post('/verifycontrol/getSubjects', (req,res)=>{
 router.post('/verifycontrol/getImages', (req,res)=>{
   try{
     console.log('post /get images by admin: ' +  req.body.subject_value + ', ' + req.body.project_value);
-    pool.execute("select answers.value as value, count(answers.value) as count from answers where project_name = \""+ req.body.project_value +"\" and subject_code = " +  req.body.subject_value + " group by(answers.value)")
+    pool.execute("select answers.value as value, count(answers.value) as count from answers where onhand in (0,2) and project_name = \""+ req.body.project_value +"\" and subject_code = " +  req.body.subject_value + " group by(answers.value)")
     .then(imgs=>{
-        res.status(200).send(imgs);
+        res.status(200).send(imgs[0]);
     })
     .catch(err=>{
         console.error('Ошибка: ' + err);
@@ -135,47 +117,33 @@ router.get('/user_list', (req, res)=> {
 
 router.post('/verifycontrol/onhand', (req,res)=>{
     let str_vals = JSON.stringify(req.body.values).substring(1,JSON.stringify(req.body.values).length -1);
-    console.log('post onhand ' + str_vals + 'pr: '+ req.body.project + ' sb: ' + req.body.subject);
+    console.log('post onhand: ' + str_vals + 'pr: '+ req.body.project + ' sb: ' + req.body.subject);
     let values = [];
     //получение списка файлов для верификации
     pool.execute('select * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject)
       .then(rows=>{
-        console.log('rows: ' + JSON.stringify(rows));
-           //обновление данных в бд, которые были взяты на контроль
-        pool.execute('update answers set onhand = 1 where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject)
-          .then(rows=>{            
-            res.status(200).send(rows);
-          })
-    .catch(err=>{
-      console.log('err: ' + err);
-      res.status(500).send(err);
-    })
-  })
+        console.log('JSON.stringify(rows[0][0].status): ' + JSON.stringify(rows[0][0].idanswer));
+        res.status(200).send(rows[0]);
+        //обновление данных в бд, которые были взяты на контроль
+        return pool.execute('update answers set onhand = 1 where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject);        
+      })
+      .catch(err=>{
+        console.log('err: ' + err);
+        res.status(500).send(err);
+      })
  
-    /*for(i = 0; i < req.body.values.length;i++){
-      console.log('req.body.values[i]: ' + req.body.values[i] +'; pr: ' +  req.body.project + '; sb: ' + req.body.subject);
-      pool.execute('select * from answers where value in ( \'' + req.body.values[i] + '\') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject, (err,rows)=>{
-        if(err){
-          console.log('err: ' + err);
-          res.status(500).send(err);
-        } else {
-          console.log('rows: ' + JSON.stringify(rows) + '; req.body.values[i]: ' + req.body.values[i]);
-          values.push(JSON.stringify(rows));
-        }
-    })
-  }*/
-  //console.log('values: ' + values);
 }); 
 
 router.post('/verifycontrol/sendResult', (req,res)=>{
-  console.log("req.body.result: " + req.body.result);
-  pool.execute('update answers set onhand = 2, status in (\'' + req.body.result + '\') where id in (\''+ req.body.id +'\') ')
-  .then(rows=>{
-
-  })
-  .catch(err=>{
-    console.log("Произошла ошибка в обновлении данныx : " + err);
-  });
+  console.log('req.body.img_id: ' + req.body.img_ids[0] + '; req.body.status: ' + req.body.statuses[0]);
+  pool.execute('update answers set onhand = 2, status = ? where idanswer = ?', req.body.statuses, req.body.img_ids)
+    .then(()=>{
+      console.log('where is my success?');
+      res.status(200).send('Good boy!');
+    })
+    .catch(err=>{
+      console.log("Произошла ошибка в обновлении данныx : " + err);
+    });
 })
 
 module.exports = router;

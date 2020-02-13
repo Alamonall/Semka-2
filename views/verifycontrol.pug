@@ -9,51 +9,28 @@ block content
             form(name='projects' action='/admin/verifycontrol/onhand' method='get' )
                 div(class='form-group row')
                         label(class="col-sm-3 col-form-label") Проекты:
-                        div(id='forProjectList' class='col-sm-6')
+                        div(id='projectSelect' class='col-sm-6')
                             select(id='prjlst' class="form-control")
-                                each project in !{projects}
+                                option(value='Выберите проект' selected='selected') Выберите проект
+                                each project in projects
                                     option(value=project.project_name)= project.project_name
                                 else
-                                    option(value='null' selected='selected') null
+                                    option(value='Проектов нет' selected='selected') Проектов нет
                 div(class='form-group row')
                         label(class="col-sm-3 col-form-label") Предмет:
-                        div(id='forSelectSbjs' class='col-sm-6')
+                        div(id='subjectSelect' class='col-sm-6')  
                             select(id='sbjlst' class="form-control")
-                                each subject in !{subjects}
-                                    option(value=subject.subject_code)= subject.subject_code 
-                                else
-                                    option(value='null' selected='selected') null
-                div(id='forTable' class='container-fluid') 
+                                option(value='Выберите предмет' selected='selected') Выберите предмет
+                div(id='answersTable' class='container-fluid') 
             form(action='/admin/verifycontrol/onhand')
                 button(id="goToVerifyButton" type="submit"  class='btn btn-primary') Проверить
         script.
-           $(document).ready(function(){     
-               $.ajax({
-                   type: 'get',
-                   url: '/admin/verifycontrol',
-                   dataType: 'json',
-                   success: function(data){
-                       
-                   }
-               })            
-               $('#sendResult').click(function(e){
-                    e.preventDefault();
-                    let resultOfVerifyControl = $("td[class=\'img\']");
-                    let data = new Object();
-                    data.id = $("td[class=\'img\']").attr('id');
-                    data.status = $("td[class=\'img\']").attr('status');
-                    $.ajax({
-                        type: 'post',
-                        url: '/admin/verifycontrol/sendResult',
-                        data: data,
-                        dataType: 'json',   
-                        success: function(data){
-                            
-                        },
-                        error: function(info){}
-                    });
-                });
-
+           $(document).ready(function(){   
+                $("#prjlst").change (function(){ 
+                    functions.getSubjects();
+                    console.log('$("select#sbjlst").val():' + $("select#sbjlst").val());                    
+                });           
+                
                 $('#goToVerifyButton').click(function(e){
                     e.preventDefault();
                     let values = $("input[type=\'checkbox\']:checked");
@@ -71,61 +48,53 @@ block content
                                 url: '/admin/verifycontrol/onhand',
                                 data: data,
                                 dataType: 'json',
-                                success: function(data){
-                                    /*let carousel = '<div id="carouselhr" class="carousel slide" data-ride="carousel">';
-                                    carousel += '<div class="carousel-inner">';
-
-                                    carousel += '<div class="carousel-item active" data-interval="false" >';
-                                    carousel += '<img src=\'' + data[0].cropped_image+'\' class="d-block w-1000" alt="...">';
-                                    carousel += '<div class="carousel-caption d-none d-md-block">';
-                                    carousel += '<p style="font-color: black;">' + data[0].value + '</p>';
-                                    carousel += '</div></div>';
-                                    for( i = 1; i < data.length; i++){
-                                        carousel += '<div class="carousel-item" data-interval="false" >';
-                                        carousel += '<img src=\'' + data[i].cropped_image+'\' class="d-block w-1000" alt="...">';
-                                        carousel += '<div class="carousel-caption d-none d-md-block">';
-                                        carousel += '<p style="font-color: black;">' + data[i].value + '</p>';
-                                        carousel += '</div></div>';
-                                    }
-                                    carousel += '</div>';
-                                    carousel += '<a class="carousel-control-prev" href="#carouselhr" role="button" data-slide="prev">';
-                                    carousel += '<span class="carousel-control-prev-icon" aria-hidden="true"></span>';
-                                    carousel += '<span class="sr-only">Previous</span></a>';
-                                    carousel += '<a class="carousel-control-next" href="#carouselhr" role="button" data-slide="next">';
-                                    carousel += '<span class="carousel-control-next-icon" aria-hidden="true"></span><span class="sr-only">Next</span></a>';
-                                    carousel += '</div>';
-                                    $('#forData').html(carousel);*/
-                                    /*console.log('data l: ' + data.length);                                    
-                                    let hand = '<ul class="list-unstyled">';
-                                    for( i = 0; i < data.length; i++){
-                                        console.log('path2: ' + decodeURI(data[i].cropped_image));
-                                        hand += '<li style=" font-size: 2em"  id=\'' + i + '\' value=\'' + data[i].value + '\'>';
-                                        hand += data[i].value + '<img src =\'' + data[i].cropped_image+'\' class="img-fluid" alt="Что-то не так с изображением">';
-                                        hand += '</img>';
-                                        hand += '<div><p>ТЕСТОВЫЙ ТЕКСТ</p></div></li>';
-                                    }
-                                    hand+= '</ul>';
-                                    $('#forData').html(hand);*/
+                                success: function(data){                                  
 
                                     let darktable = '<table id="verifyControlTable" class="table table-hover table-bordered">';
                                         darktable +='<tbody>';
-                                    for( i = 0; i < data.length; i++){
-                                        darktable += '<tr height="110"><th scrope="row">' + data[i].value + '</th>';
-                                        darktable += '<td class="img" status="0" id=\'' + data[i].id + '\'><img src=\'' + data[i].cropped_image + '\' alt=\'Изображение со значением: '+ data[i].value +  '\' height="92" width="1071"/>';
+                                    $.each(data, function(key,value){
+                                        darktable += '<tr height="110"><th scrope="row">' + value.value + '</th>';
+                                        darktable += '<td class="img" status="0" id=\'' + value.idanswer + '\'><img src=\'' + value.cropped_image + '\' alt=\'Изображение со значением: '+ value.value +  '\' height="92" width="1071"/>';
                                         darktable += '</td>';
                                         darktable += '<td><ul class="list-unstyled">';
-                                        darktable += '<li>' + data[i].task + '</li>'
+                                        darktable += '<li>' + value.task + '</li>'
                                         darktable += '<li>' + 'ФИО:' + '</li>'
                                         darktable += '<li>' + 'Никнейм:' + '</li>'
-                                        darktable += '<li><a href="' + data[i].original_image +'">Ссылка на бланк</a></li>'
+                                        darktable += '<li><a href="' + value.original_image +'">Ссылка на бланк</a></li>'
                                          '</ul></td>'
                                         darktable += '</tr>';
 
-                                    }
+                                    })
                                     darktable += '</tbody></table>'
-                                    darktable += '<div><button id="sendResult" type="submit"  class="btn btn-primary">Отправить</button></div>'
+                                    darktable += '<div><button id="sendResult" class="btn btn-primary">Отправить</button></div>'
+                                    
                                     
                                     $('#forData').html(darktable);
+                                    $('#sendResult').bind('click', function(e){
+                                        e.preventDefault();
+                                        let resultOfVerifyControl = $("td[class=\'img\']");
+                                        if(resultOfVerifyControl.length){
+                                            let answers = new Object();
+                                            answers.img_ids = new Object();
+                                            answers.statuses = new Object();
+                                            for(let i = 0; i < resultOfVerifyControl.length; i++){
+                                                answers.img_ids[i] = $("td[class=\'img\']").attr('id');
+                                                answers.statuses[i] = $("td[class=\'img\']").attr('status');
+                                            }   
+                                            $.ajax({ 
+                                                type: 'post',
+                                                url: '/admin/verifycontrol/sendResult',
+                                                data: answers,
+                                                dataType: 'json',   
+                                                success: function(data){
+                                                    console.log('send result success');//location.href=location.href;
+                                                   
+                                                },
+                                                error: function(info){}
+                                            });
+                                            location.reload();
+                                        }
+                                    })
                                     $('#forData').bind('change', function(){
                                         alert('Что-то изменилось в твоей изни');
                                     })
@@ -153,13 +122,6 @@ block content
                         }
                    
                 })
-                $('#sbjlst').change(function(){
-                    functions.getImages();
-                }); 
-                $("#prjlst").change(function(){ 
-                    functions.getSubjects();
-                    console.log('$("select#sbjlst").val():' + $("select#sbjlst").val());                    
-               }); 
            })
 
            const functions = {
@@ -187,17 +149,16 @@ block content
                         data: 'project_value=' + $("select#prjlst").val(),
                         success: function(data){
                             $("#sbjlst").remove();
-                            let select = '<select id="sbjlst" class="form-control">'
+                            let select = '<select id="sbjlst" class="form-control"><option value="Выбрать предмет" selected="selected">Выбрать предмет</option>'
                             $.each(data, function(key, value) { 
-                                select += '<option value="' + JSON.stringify(value.subject_code) + '">' + JSON.stringify(value.subject_code) + '</option>';
+                                select += '<option value=\'' + JSON.stringify(value.subject_code) + '\'>' + JSON.stringify(value.subject_code) + '</option>';
                             })
                             select += '</select>';                           
-                            $('#forSelectSbjs').html(select);
+                            $('#subjectSelect').html(select);
                             $('#sbjlst').bind('change',function(){ 
                                   functions.getImages();
-                                }); 
-                            //чтобы при смене предмета запускаласт функция с обновлением изображений
-                            functions.getImages(); 
+                            });
+                            $('#preVerifyControlTable').remove();
                         },
                         error: function(){
                             alert('Шо то не так( ' + document.getElementById('prjlst').value)
@@ -226,7 +187,7 @@ block content
                                     //console.log("numcOfCols: " +numOfCols);
                                 }
                                 for(let j=0;j<numOfCols;j++){
-                                    table_body +='<td value ="'+ data[+(''+i+j)].value +'" align="center">';
+                                    table_body +='<td value =\''+ data[+(''+i+j)].value +'\' align="center">';
                                     //console.log(" numOfCols j: " + numOfCols + ' and ' + j);
                                     table_body +='<input id=\'' + (''+i+j) +'\'type=\'checkbox\' value=\''+ data[+(''+i+j)].value+ '\'>';
                                     table_body +=data[+(''+i+j)].value + '('+JSON.stringify(data[+(''+i+j)].count)+ ')';
@@ -236,10 +197,10 @@ block content
                                 table_body+='</tr>';
                             }
                             table_body+='</tbody></table>'
-                            $('#forTable').html(table_body);  
+                            $('#answersTable').html(table_body);  
                             //Не работает тема, вернуться и доделать
                             $('#preVerifyControlTable input').bind('click',function(){ 
-                                    $(this).css('background-color', 'green');
+                                $(this).css('background-color', 'green');
                             }); 
                }
            }
