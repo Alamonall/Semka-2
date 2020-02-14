@@ -93,9 +93,8 @@ let inst = {
       });
     }
     let asyncQueue = async.queue(function(task,callback){
-        imageCrop(task._item,task._data,task._i,task._project_name);
-        callback();
-      },250);
+        task(callback);          
+      },100);
     console.log('manys: ' + manys);
       for(let item of aud_list){
         //console.log('xml path: '+ item + '.XML');   
@@ -136,7 +135,12 @@ let inst = {
                 
                 mkdir(path.join(__dirname, '/memory/', project_name,'/images/', data.batch.page[0].block[3]._,'/'), {recursive: true })
                   .then(
-                      asyncQueue.push( {_item: item, _data: data, _i: i, _project_name: project_name}))
+                      //asyncQueue.push( {_item: item, _data: data, _i: i, _project_name: project_name}),
+                      asyncQueue.push(  imageCrop(item,data,i,project_name))
+                  )
+                  .catch((err)=>{
+                    console.log('mkdir errror: ' + err);
+                  })
               }
             } 
           }       
@@ -162,24 +166,32 @@ let inst = {
  
 //резка изображений
 function imageCrop(item, data, i, project_name){
+  return function(callback){
   //console.log('with toFile:' + i);
-  readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
-  .then((inf)=>
-      sharp(inf)
-        .extract(         
-          {'left': parseInt(data.batch.page[0].block[i].ATTR.l), 'top': parseInt(data.batch.page[0].block[i].ATTR.t),
-          /*width*/'width' : 1071,//parseInt(data.batch.page[0].block[i].ATTR.r - data.batch.page[0].block[i].ATTR.l),
-          /*height*/'height': 92,//parseInt(data.batch.page[0].block[i].ATTR.b - data.batch.page[0].block[i].ATTR.t)
-        })
-        .toFile(path.join(__dirname, '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
-        + '_' + path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png')
-
-  )
-  .catch((err)=>{
-    console.log('err in imageCrop[' + i + ']: '+ err);
-    imageCrop(item, data, i, project_name);
-  });
-} 
+  try{
+    readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
+    .then((inf)=>{
+        sharp(inf)
+          .extract(      
+            {'left': parseInt(data.batch.page[0].block[i].ATTR.l), 
+            'top': parseInt(data.batch.page[0].block[i].ATTR.t),
+            /*width*/'width' : 1071,//parseInt(data.batch.page[0].block[i].ATTR.r - data.batch.page[0].block[i].ATTR.l),
+            /*height*/'height': 92,//parseInt(data.batch.page[0].block[i].ATTR.b - data.batch.page[0].block[i].ATTR.t)
+          })
+          .toFile(
+            path.join(__dirname, '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
+          + '_' + path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png', callback())
+    })
+    //.then(()=>callback())
+    .catch((err)=>{
+      console.log('err in imageCrop[' + i + ']: '+ err);
+      callback();
+      //imageCrop(item, data, i, project_name);
+    });
+  } catch(err){
+    console.log('ошбика в imgeCrop: ' + err);
+  }
+}} 
 
 //функция для энкодинга 
 function readFileSync_encoding(filename,enc){
