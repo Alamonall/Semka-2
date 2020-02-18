@@ -120,12 +120,12 @@ router.post('/verifycontrol/onhand', (req,res)=>{
     console.log('post onhand: ' + str_vals + 'pr: '+ req.body.project + ' sb: ' + req.body.subject);
     let values = [];
     //получение списка файлов для верификации
-    pool.execute('select * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject)
+    pool.execute('select distinct * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject + ' limit 500')
       .then(rows=>{
         console.log('JSON.stringify(rows[0][0].status): ' + JSON.stringify(rows[0][0].idanswer));
         res.status(200).send(rows[0]);
         //обновление данных в бд, которые были взяты на контроль
-        return pool.execute('update answers set onhand = 1 where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject);        
+        return pool.execute('update answers set onhand = 1 where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject  + ' limit 500');        
       })
       .catch(err=>{
         console.log('err: ' + err);

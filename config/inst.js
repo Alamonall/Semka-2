@@ -22,9 +22,9 @@ let inst = {
     let list = fs.readdirSync(dir);       
     //console.log('list: '+ list.length); 
     for (let item of list) {
-      if (fs.statSync(dir + "\\" + item).isDirectory()) {
+      if (fs.statSync(dir + '\\' + item).isDirectory()) {
         //console.log('project_list' + item);
-        project_list.push("\t".repeat(0) + item);
+        project_list.push('\t'.repeat(0) + item);
       }
     } 
     
@@ -34,35 +34,30 @@ let inst = {
 
   getFiles: function (project_name) {
    
-    let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000'),
-      paths_to_the_aud = fs.readdirSync(dir), aud_list = [];
+    let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000');
+    let paths_to_the_aud = fs.readdirSync(dir);
+    let aud_list = [];
 
     const pool = mysql.createPool({
-      host: "localhost",
-      user: "admin",
-      database: "ver_db",
-      password: "Adminspassword"
+      host: 'localhost',
+      user: 'admin',
+      database: 'ver_db',
+      password: 'Adminspassword'
     });
 
     //создание папки с проектом, если её нет
     fs.mkdir(path.join(__dirname, '/memory/', project_name), { recursive: true}, (err)=>{
       if(err)
-      console.log('err: ' + err);
+        console.log('err: ' + err);
     });
 
     for (let item of paths_to_the_aud) {
       //выборка необходимых файлов с данными ддя резки и ответов
-      let files = fs.readdirSync(dir + '\\' + item);
-      //console.log('name', files);
+      let files = fs.readdirSync(dir + '\\' + item); 
       for(let file of files)
       {
-        if(file.match(/AB/)){
-            //console.log('name: ' + file);
-            if(path.extname(file).match(/XML/)){
-              /*console.log('exte: ' + path.extname(file));  
-              console.log('filename: ' + path.parse(file).name);  
-              console.log('dir: ' + dir);
-              console.log('dir_path: ' + path.join(dir, item, path.parse(file).name));*/
+        if(file.match(/AB/)){ 
+            if(path.extname(file).match(/XML/)){ 
               aud_list.push(path.join(dir, item, path.parse(file).name));
           }
         }    
@@ -70,13 +65,14 @@ let inst = {
     }
 
     try{
+      //количество файлов в итоге. По идее. создано для отслеживания процесса обработки (не работает)
       let manys = 0;
       for(let item of aud_list){
         //console.log('xml path: '+ item + '.XML');   
         //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
         let xml_string = readFileSync_encoding(item + '.XML', 'UTF-16');//.replace(/\?\?/,'');
         
-        //вытаскиваем из файлов необходимые данные
+        //распарсивание xml-ки с данными об ответах и изображениях, которые нужно резать
         parser.parseString(xml_string, (err,data) => {
           if(err)
             console.error('err in parseString : ' + err);
@@ -93,8 +89,9 @@ let inst = {
       });
     }
     let asyncQueue = async.queue(function(task,callback){
-        task(callback);          
-      },100);
+      task(callback); 
+      console.log('This is the end in async');         
+    },100);
     console.log('manys: ' + manys);
       for(let item of aud_list){
         //console.log('xml path: '+ item + '.XML');   
@@ -113,7 +110,6 @@ let inst = {
                 /*
                   вставка данных в бд об обрезанном изображении
                 */
-                console.log('progress: ' + manys--);
                 let sql = 'insert into answers(`status`, `onhand`, `value`, `cropped_image`, `original_image`, `subject_code`, `project_name` , `task`)' 
                   +' values(?, ? , ? , ? , ?, ? ,?, ?);'
                 let insterts = [
@@ -133,10 +129,10 @@ let inst = {
                   }
                 }); 
                 
-                mkdir(path.join(__dirname, '/memory/', project_name,'/images/', data.batch.page[0].block[3]._,'/'), {recursive: true })
+                mkdir(path.join(__dirname, '../public/memory/', project_name,'/images/', data.batch.page[0].block[3]._,'/'), {recursive: true })
                   .then(
                       //asyncQueue.push( {_item: item, _data: data, _i: i, _project_name: project_name}),
-                      asyncQueue.push(  imageCrop(item,data,i,project_name))
+                      asyncQueue.push(  imageCrop(item, data, i, project_name))
                   )
                   .catch((err)=>{
                     console.log('mkdir errror: ' + err);
@@ -179,17 +175,16 @@ function imageCrop(item, data, i, project_name){
             /*height*/'height': 92,//parseInt(data.batch.page[0].block[i].ATTR.b - data.batch.page[0].block[i].ATTR.t)
           })
           .toFile(
-            path.join(__dirname, '/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
-          + '_' + path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png', callback())
-    })
-    //.then(()=>callback())
+            path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
+          + '_' + path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png', /*???*/ callback())
+    }) 
     .catch((err)=>{
       console.log('err in imageCrop[' + i + ']: '+ err);
       callback();
       //imageCrop(item, data, i, project_name);
     });
   } catch(err){
-    console.log('ошбика в imgeCrop: ' + err);
+    console.log('ошибка в imgeCrop: ' + err);
   }
 }} 
 

@@ -52,7 +52,9 @@ block content
 
                                     let darktable = '<table id="verifyControlTable" class="table table-hover table-bordered">';
                                         darktable +='<tbody>';
+                                        console.log(data);
                                     $.each(data, function(key,value){
+                                        
                                         darktable += '<tr height="110"><th scrope="row">' + value.value + '</th>';
                                         darktable += '<td class="img" status="0" id=\'' + value.idanswer + '\'><img src=\'' + value.cropped_image + '\' alt=\'Изображение со значением: '+ value.value +  '\' height="92" width="1071"/>';
                                         darktable += '</td>';
