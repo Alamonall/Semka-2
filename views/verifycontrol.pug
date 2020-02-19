@@ -54,9 +54,9 @@ block content
                                         darktable +='<tbody>';
                                         console.log(data);
                                     $.each(data, function(key,value){
-                                        
-                                        darktable += '<tr height="110"><th scrope="row">' + value.value + '</th>';
-                                        darktable += '<td class="img" status="0" id=\'' + value.idanswer + '\'><img src=\'' + value.cropped_image + '\' alt=\'Изображение со значением: '+ value.value +  '\' height="92" width="1071"/>';
+                                         darktable += '<tr height="110"><th scrope="row">' + key + '</th>';
+                                        darktable += '<td scrope="row">' + value.value + '</td>';
+                                        darktable += '<td class="img" status="0" id=\'' + value.idanswer + '\'><a href="2.html" target="_blank" ><img src=\'' + value.cropped_image + '\' alt=\'Изображение со значением: '+ value.value +  '\' height="92" width="1071"/></a>';
                                         darktable += '</td>';
                                         darktable += '<td><ul class="list-unstyled">';
                                         darktable += '<li>' + value.task + '</li>'

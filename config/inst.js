@@ -90,7 +90,6 @@ let inst = {
     }
     let asyncQueue = async.queue(function(task,callback){
       task(callback); 
-      console.log('This is the end in async');         
     },100);
     console.log('manys: ' + manys);
       for(let item of aud_list){
@@ -132,7 +131,7 @@ let inst = {
                 mkdir(path.join(__dirname, '../public/memory/', project_name,'/images/', data.batch.page[0].block[3]._,'/'), {recursive: true })
                   .then(
                       //asyncQueue.push( {_item: item, _data: data, _i: i, _project_name: project_name}),
-                      asyncQueue.push(  imageCrop(item, data, i, project_name))
+                      asyncQueue.push(  imageCrop(item, data, page, project_name))
                   )
                   .catch((err)=>{
                     console.log('mkdir errror: ' + err);
@@ -161,31 +160,32 @@ let inst = {
 }
  
 //резка изображений
-function imageCrop(item, data, i, project_name){
+function imageCrop(item, data, page, project_name){
   return function(callback){
   //console.log('with toFile:' + i);
-  try{
-    readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
-    .then((inf)=>{
-        sharp(inf)
-          .extract(      
-            {'left': parseInt(data.batch.page[0].block[i].ATTR.l), 
-            'top': parseInt(data.batch.page[0].block[i].ATTR.t),
-            /*width*/'width' : 1071,//parseInt(data.batch.page[0].block[i].ATTR.r - data.batch.page[0].block[i].ATTR.l),
-            /*height*/'height': 92,//parseInt(data.batch.page[0].block[i].ATTR.b - data.batch.page[0].block[i].ATTR.t)
-          })
-          .toFile(
-            path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
-          + '_' + path.parse(item).name + '_' + data.batch.page[0].block[i].ATTR.blockName + '.png', /*???*/ callback())
-    }) 
-    .catch((err)=>{
-      console.log('err in imageCrop[' + i + ']: '+ err);
-      callback();
-      //imageCrop(item, data, i, project_name);
-    });
-  } catch(err){
-    console.log('ошибка в imgeCrop: ' + err);
-  }
+  readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
+  .then((inf)=>{
+      sharp(inf)
+        .extract(      
+          {'left': parseInt(page.ATTR.l), 
+          'top': parseInt(page.ATTR.t),
+          /*width*/'width' : /*1071*/parseInt(page.ATTR.r) - parseInt(page.ATTR.l),
+          /*height*/'height': /*92*/parseInt(page.ATTR.b) - parseInt(page.ATTR.t)
+        })
+        .toFile(
+          path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
+        + '_' + path.parse(item).name + '_' + page.ATTR.blockName + '.png', (err)=>{
+          if(err){
+            console.log('error in toFile: ' + err);
+            //imageCrop(item, data, page, project_name);
+          }
+        })
+  }) 
+  .catch((err)=>{
+    console.log('err in imageCrop[]: '+ err);
+    callback();
+    //imageCrop(item, data, page, project_name);
+  }); 
 }} 
 
 //функция для энкодинга 
