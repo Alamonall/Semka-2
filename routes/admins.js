@@ -17,7 +17,7 @@ const get_users_query = 'SELECT UserName ,UserFIO FROM [TRDB1].[dbo].[useUsers]'
 
 const pool = mysql.createPool({
   host: "localhost",
-  user: "admin",
+  user: "root",
   database: "ver_db",
   password: "Adminspassword"
 }).promise();
@@ -71,26 +71,31 @@ router.get('/verifycontrol', (req, res)=> {
   //pool.end();
 });
 
+/*
+Получение списка предметов для контроля верификации
+*/
 router.post('/verifycontrol/getSubjects', (req,res)=>{
   try{
     console.log('post /get subjects by admin: ' +  req.body.project_value);
-    pool.execute("select subject_code from complete_projects where project_name = \"" + req.body.project_value + "\"")
-    .then(result=>{
-      res.status(200).send(result[0]);
-    })
-    .catch(err=>{
-      console.log(err);
-    }) 
+    pool.execute("select distinct subject_code from complete_projects where project_name = \"" + req.body.project_value + "\"")
+      .then(result=>{
+        res.status(200).send(result[0]);
+      })
+      .catch(err=>{
+        console.log(err);
+      }) 
   } catch(err){
       throw err;
     }
 });
 
-
+/*
+Получение списка изображений на основе выбранного имени проекта и кода предмета
+*/
 router.post('/verifycontrol/getImages', (req,res)=>{
   try{
     console.log('post /get images by admin: ' +  req.body.subject_value + ', ' + req.body.project_value);
-    pool.execute("select answers.value as value, count(answers.value) as count from answers where onhand in (0,2) and project_name = \""+ req.body.project_value +"\" and subject_code = " +  req.body.subject_value + " group by(answers.value)")
+    pool.execute("select answers.value as value, count(answers.value) as count from answers where onhand in (0,2) and project_name = \""+ req.body.project_value +"\" and subject_code = " +  req.body.subject_value + " group by(answers.value) order by answers.value")
     .then(imgs=>{
         res.status(200).send(imgs[0]);
     })
@@ -103,24 +108,28 @@ router.post('/verifycontrol/getImages', (req,res)=>{
   }
 });
 
-//временное решение
-let temp_user_list_rows = ({UserFIO: 'a'},{UserName:'b'});
+/*
+Получение списк пользователей
+*/
 router.get('/user_list', (req, res)=> {
-  //временное решение
-  res.render('user_list', { title: 'Список пользователей', users: temp_user_list_rows});
-  /*sql.query(connectionString,get_users_query,(err,rows) =s>{
-    console.log(rows);
-    res.render('user_list', { title: 'Список пользователей',
-    users: rows});
-    })*/
+  pool.execute('select * from users')
+    .then( rows=>
+      res.render('user_list', { title: 'Список пользователей', users: rows[0]})
+    ) 
+    .catch(err=>{
+      console.log('err: ' + err);
+      res.status(500).send(err);
+    })
 });
-
+/*
+Получение ответов для контроля верификации
+*/ 
 router.post('/verifycontrol/onhand', (req,res)=>{
     let str_vals = JSON.stringify(req.body.values).substring(1,JSON.stringify(req.body.values).length -1);
     console.log('post onhand: ' + str_vals + 'pr: '+ req.body.project + ' sb: ' + req.body.subject);
     let values = [];
     //получение списка файлов для верификации
-    pool.execute('select distinct * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject + ' limit 500')
+    pool.execute('select distinct * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject + ' order by value limit 500 ')
       .then(rows=>{
         console.log('JSON.stringify(rows[0][0].status): ' + JSON.stringify(rows[0][0].idanswer));
         res.status(200).send(rows[0]);

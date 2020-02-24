@@ -8,7 +8,7 @@ const mysql = require('mysql2');
 //const bcrypt = require('bcrypt'); 
 const pool = mysql.createPool({
     host: "localhost",
-    user: "admin",
+    user: "root",
     database: "ver_db",
     password: "Adminspassword"
 }); 

@@ -40,7 +40,7 @@ let inst = {
 
     const pool = mysql.createPool({
       host: 'localhost',
-      user: 'admin',
+      user: 'root',
       database: 'ver_db',
       password: 'Adminspassword'
     });
@@ -65,35 +65,10 @@ let inst = {
     }
 
     try{
-      //количество файлов в итоге. По идее. создано для отслеживания процесса обработки (не работает)
-      let manys = 0;
+      let asyncQueue = async.queue(function(task,callback){
+        task(callback); 
+      },1000);
       for(let item of aud_list){
-        //console.log('xml path: '+ item + '.XML');   
-        //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
-        let xml_string = readFileSync_encoding(item + '.XML', 'UTF-16');//.replace(/\?\?/,'');
-        
-        //распарсивание xml-ки с данными об ответах и изображениях, которые нужно резать
-        parser.parseString(xml_string, (err,data) => {
-          if(err)
-            console.error('err in parseString : ' + err);
-          else{
-            for(let i = 0; i < 75; i++){ // число 75 взято от бaлды, лучше будет придумать что-нибудь по-надёжнее 
-              let page = data.batch.page[0].block[i];
-              if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' 
-              || page.ATTR.blockName.match(/В\d\d/) === null )){
-                //проверка на существование папки предмета (например 1 - русский) с  ответом или её создание
-                manys++;
-              }
-            }
-          }
-      });
-    }
-    let asyncQueue = async.queue(function(task,callback){
-      task(callback); 
-    },100);
-    console.log('manys: ' + manys);
-      for(let item of aud_list){
-        //console.log('xml path: '+ item + '.XML');   
         //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
         let xml_string = readFileSync_encoding(item + '.XML', 'UTF-16');//.replace(/\?\?/,'');
         
@@ -103,35 +78,46 @@ let inst = {
             console.error('err in parseString : ' + err);
           else{
             for(let i = 0; i < 75; i++){ // число 75 взято от бaлды, лучше будет придумать что-нибудь по-надёжнее 
-              let page = data.batch.page[0].block[i];
+              let page = data.batch.page[0].block[i];              
               if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){
+                /*console.log('item: ' + item);
+                console.log('page._: ' + page._);
+                console.log('page.ATTR.blockName.match(/В\d\d/): ' + page.ATTR.blockName.match(/В\d\d/));
                 //проверка на существование папки предмета (например 1 - русский) с  ответом или её создание
                 /*
                   вставка данных в бд об обрезанном изображении
                 */
                 let sql = 'insert into answers(`status`, `onhand`, `value`, `cropped_image`, `original_image`, `subject_code`, `project_name` , `task`)' 
                   +' values(?, ? , ? , ? , ?, ? ,?, ?);'
+                console.log('data.batch.page[0].block[3]._: ' + data.batch.page[0].block[3]._);
+                console.log('image: ' + '\\memory\\' + project_name + '\\images\\'+ /*код предмета*/ data.batch.page[0].block[3]._ + '\\' + /*штрих-код изображения*/ data.batch.page[0].block[31]._ + '\\' + data.batch.page[0].block[3]._ + '_' +
+                path.parse(item).name + '_' + page.ATTR.blockName + '.png');
+                console.log('')
                 let insterts = [
-                  0, 0, page._ ,
-                  '\\memory\\' + project_name+ '\\images\\'+ data.batch.page[0].block[3]._+ '\\' + data.batch.page[0].block[3]._ + '_' +
-                  path.parse(item).name + '_' + page.ATTR.blockName + '.png' 
-                  , item + '.TIF' , data.batch.page[0].block[3]._ , project_name, page.ATTR.blockName ];
+                  0,
+                  0,
+                  page._ ,
+                  '\\memory\\' + project_name + '\\images\\'+ /*код предмета*/ data.batch.page[0].block[3]._ + '\\' + /*штрих-код изображения*/ data.batch.page[0].block[31]._ + '\\' + data.batch.page[0].block[3]._ + '_' +
+                  path.parse(item).name + '_' + page.ATTR.blockName + '.png',
+                  /*полный путь к оригинальному изображению*/ item + '.TIF',
+                  data.batch.page[0].block[3]._,
+                  project_name,
+                  /*номер задания*/ page.ATTR.blockName 
+                ];
                 
-                pool.execute(sql,insterts, (err)=>{
-                      if(err) 
-                        return console.error("Ошибка: " + err.message); 
+                pool.execute(sql, insterts, (err)=>{
+                  if(err) 
+                    console.log('Ошибка: ' + err.message);
                 });
 
-                pool.execute('insert into complete_projects(project_name,subject_code) values(\"' + project_name + '\",' + data.batch.page[0].block[3]._ +')' ,(err)=>{
-                  if(err)  {
-                    //return console.log("Ошибка: " + err.message);
-                  }
+                pool.execute('insert into complete_projects(project_name, subject_code) values(?,?)', [project_name, data.batch.page[0].block[3]._] , (err)=>{
+                  if(err)
+                    console.log("Ошибка: " + err.message);
                 }); 
                 
-                mkdir(path.join(__dirname, '../public/memory/', project_name,'/images/', data.batch.page[0].block[3]._,'/'), {recursive: true })
-                  .then(
-                      //asyncQueue.push( {_item: item, _data: data, _i: i, _project_name: project_name}),
-                      asyncQueue.push(  imageCrop(item, data, page, project_name))
+                mkdir(path.join( __dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ data.batch.page[0].block[31]._+ '/'), {recursive: true })
+                  .then(                      
+                      asyncQueue.push( imageCrop(item, data, page, project_name))
                   )
                   .catch((err)=>{
                     console.log('mkdir errror: ' + err);
@@ -140,16 +126,7 @@ let inst = {
             } 
           }       
         })
-      }
-      /*
-      pool.end(function(err) {
-        if (err) {
-          return console.error(err.message);
-        } else {
-          console.log('pool is closed');
-        }
-      });*/
-     
+      }  
 
     return true;
 
@@ -162,29 +139,33 @@ let inst = {
 //резка изображений
 function imageCrop(item, data, page, project_name){
   return function(callback){
-  //console.log('with toFile:' + i);
+  console.log('********************************************************************');
+  console.log('item: ' + item);
+  console.log('page._: ' + page._);
+  console.log('page.ATTR.blockName): ' + page.ATTR.blockName);
+  console.log('data.batch.page[0].block[31]._: ' + data.batch.page[0].block[31]._);
+  console.log('********************************************************************');
   readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
   .then((inf)=>{
       sharp(inf)
         .extract(      
           {'left': parseInt(page.ATTR.l), 
           'top': parseInt(page.ATTR.t),
-          /*width*/'width' : /*1071*/parseInt(page.ATTR.r) - parseInt(page.ATTR.l),
-          /*height*/'height': /*92*/parseInt(page.ATTR.b) - parseInt(page.ATTR.t)
+          'width' : /*1071*/parseInt(page.ATTR.r) - parseInt(page.ATTR.l),
+          'height': /*92*/parseInt(page.ATTR.b) - parseInt(page.ATTR.t)
         })
         .toFile(
-          path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/') + data.batch.page[0].block[3]._ 
+          path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ data.batch.page[0].block[31]._+ '/') + data.batch.page[0].block[3]._ 
         + '_' + path.parse(item).name + '_' + page.ATTR.blockName + '.png', (err)=>{
           if(err){
-            console.log('error in toFile: ' + err);
-            //imageCrop(item, data, page, project_name);
+            console.log('Error in toFile: ' + JSON.stringify(err.message)); 
+          } else{
+            callback();
           }
         })
   }) 
   .catch((err)=>{
     console.log('err in imageCrop[]: '+ err);
-    callback();
-    //imageCrop(item, data, page, project_name);
   }); 
 }} 
 
@@ -195,21 +176,3 @@ function readFileSync_encoding(filename,enc){
 }
 
 module.exports = inst;
-/*CREATE TABLE IF NOT EXISTS `ver_db`.`answers` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `value` VARCHAR(45) NOT NULL,
-  `status` INT NOT NULL,
-  `onhand` INT NOT NULL,
-  `cropped_image` VARCHAR(200) NOT NULL,
-  `original_image` VARCHAR(200) NOT NULL,
-  `subject_code` INT NOT NULL,
-  `project_name` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-
-CREATE TABLE IF NOT EXISTS `ver_db`.`complete_projects` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `project_name` VARCHAR(45) NOT NULL,
-  `subject_code` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB*/

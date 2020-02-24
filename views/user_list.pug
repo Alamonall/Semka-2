@@ -11,11 +11,14 @@ block content
                  tr
                   th(scope='col') Ник
                   th(scope='col') Имя
+                  th(scope='col') Роль
                 tbody
                  each user in users
                   tr
-                   td= user.UserName
-                   td= user.UserFIO
+                   td= user.username
+                   td= user.surname + ' ' + user.name + ' ' + user.secondname
+                   td= user.privileges
+                   
                  
 
                   
