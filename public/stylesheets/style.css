@@ -78,8 +78,25 @@ form#logout{
   margin: 0 30px;
 }
 }
-#verifyControlTable td{
-  width: 105px;
+table th.info{
+  vertical-align: middle;
+  width: 100px;
+}
+
+table td.info{
+  width: 100px;
+  vertical-align: middle;
+}
+
+table td.img{
+  width: 100%;
+    min-height: 100%;
+  padding: 0%;
+  vertical-align: middle;
   /*table-layout: fixed;*/
+}
+table #verifyControlTable {
+  width: 100%;
+  min-height: 100%;
 }
  

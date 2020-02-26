@@ -65,8 +65,26 @@ let inst = {
     }
 
     try{
+      var countCroppedImages = 0;
+      for(let item of aud_list){
+        //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
+        let xml_string = readFileSync_encoding(item + '.XML', 'UTF-16');//.replace(/\?\?/,'');
+        
+        //вытаскиваем из файлов необходимые данные
+        parser.parseString(xml_string, (err,data) => {
+            for(let i = 0; i < 75; i++){ // число 75 взято от бaлды, лучше будет придумать что-нибудь по-надёжнее 
+              let page = data.batch.page[0].block[i];      
+              if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){
+                countCroppedImages++;
+              }
+            }
+        });
+      }
+      console.log('countCroppedImages: ' + countCroppedImages);
+             
       let asyncQueue = async.queue(function(task,callback){
         task(callback); 
+        //console.log('countCroppedImages: ' + countCroppedImages--);
       },1000);
       for(let item of aud_list){
         //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
@@ -74,12 +92,12 @@ let inst = {
         
         //вытаскиваем из файлов необходимые данные
         parser.parseString(xml_string, (err,data) => {
-          if(err)
+          /*if(err)
             console.error('err in parseString : ' + err);
-          else{
+          else{*/
             for(let i = 0; i < 75; i++){ // число 75 взято от бaлды, лучше будет придумать что-нибудь по-надёжнее 
               let page = data.batch.page[0].block[i];              
-              if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){
+              if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){                
                 /*console.log('item: ' + item);
                 console.log('page._: ' + page._);
                 console.log('page.ATTR.blockName.match(/В\d\d/): ' + page.ATTR.blockName.match(/В\d\d/));
@@ -89,10 +107,11 @@ let inst = {
                 */
                 let sql = 'insert into answers(`status`, `onhand`, `value`, `cropped_image`, `original_image`, `subject_code`, `project_name` , `task`)' 
                   +' values(?, ? , ? , ? , ?, ? ,?, ?);'
+                /*
                 console.log('data.batch.page[0].block[3]._: ' + data.batch.page[0].block[3]._);
-                console.log('image: ' + '\\memory\\' + project_name + '\\images\\'+ /*код предмета*/ data.batch.page[0].block[3]._ + '\\' + /*штрих-код изображения*/ data.batch.page[0].block[31]._ + '\\' + data.batch.page[0].block[3]._ + '_' +
-                path.parse(item).name + '_' + page.ATTR.blockName + '.png');
-                console.log('')
+                console.log('image: ' + '\\memory\\' + project_name + '\\images\\'+ data.batch.page[0].block[3]._ + '\\' + data.batch.page[0].block[31]._ + '\\' + data.batch.page[0].block[3]._ + '_' +
+                 path.parse(item).name + '_' + page.ATTR.blockName + '.png');
+                console.log('')*/
                 let insterts = [
                   0,
                   0,
@@ -105,15 +124,9 @@ let inst = {
                   /*номер задания*/ page.ATTR.blockName 
                 ];
                 
-                pool.execute(sql, insterts, (err)=>{
-                  if(err) 
-                    console.log('Ошибка: ' + err.message);
-                });
+                pool.execute(sql, insterts);
 
-                pool.execute('insert into complete_projects(project_name, subject_code) values(?,?)', [project_name, data.batch.page[0].block[3]._] , (err)=>{
-                  if(err)
-                    console.log("Ошибка: " + err.message);
-                }); 
+                pool.execute('insert into complete_projects(project_name, subject_code) values(?,?)', [project_name, data.batch.page[0].block[3]._]); 
                 
                 mkdir(path.join( __dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ data.batch.page[0].block[31]._+ '/'), {recursive: true })
                   .then(                      
@@ -124,14 +137,14 @@ let inst = {
                   })
               }
             } 
-          }       
+          //}       
         })
       }  
 
     return true;
 
   } catch (err){
-      console.error('Ошибика: ' + err);
+      console.error('Ошибка: ' + err);
     }
   }, 
 }
@@ -139,34 +152,54 @@ let inst = {
 //резка изображений
 function imageCrop(item, data, page, project_name){
   return function(callback){
-  console.log('********************************************************************');
-  console.log('item: ' + item);
-  console.log('page._: ' + page._);
-  console.log('page.ATTR.blockName): ' + page.ATTR.blockName);
-  console.log('data.batch.page[0].block[31]._: ' + data.batch.page[0].block[31]._);
-  console.log('********************************************************************');
-  readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
-  .then((inf)=>{
-      sharp(inf)
-        .extract(      
-          {'left': parseInt(page.ATTR.l), 
-          'top': parseInt(page.ATTR.t),
-          'width' : /*1071*/parseInt(page.ATTR.r) - parseInt(page.ATTR.l),
-          'height': /*92*/parseInt(page.ATTR.b) - parseInt(page.ATTR.t)
-        })
-        .toFile(
-          path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ data.batch.page[0].block[31]._+ '/') + data.batch.page[0].block[3]._ 
-        + '_' + path.parse(item).name + '_' + page.ATTR.blockName + '.png', (err)=>{
-          if(err){
-            console.log('Error in toFile: ' + JSON.stringify(err.message)); 
-          } else{
-            callback();
-          }
-        })
-  }) 
-  .catch((err)=>{
-    console.log('err in imageCrop[]: '+ err);
-  }); 
+    /*console.log('********************************************************************');
+    console.log('item: ' + item);
+    console.log('page._: ' + page._);
+    console.log('page.ATTR.blockName): ' + page.ATTR.blockName);
+    console.log('data.batch.page[0].block[31]._: ' + data.batch.page[0].block[31]._);
+    console.log('********************************************************************');*/
+    readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
+    .then((input)=>{
+        sharp(input)
+          .extract(      
+            {'left': parseInt(page.ATTR.l), 
+            'top': parseInt(page.ATTR.t),
+            'width' : /*1071*/parseInt(page.ATTR.r) - parseInt(page.ATTR.l),
+            'height': /*92*/parseInt(page.ATTR.b) - parseInt(page.ATTR.t)
+          })
+          .toFile(
+            path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ data.batch.page[0].block[31]._+ '/') + data.batch.page[0].block[3]._ 
+          + '_' + path.parse(item).name + '_' + page.ATTR.blockName + '.png')
+            .then(data =>{
+              callback()
+            })
+            .catch(err =>{
+              console.log('Error in toFile: ' + err.message)
+              /*
+              Запускаем резку для данного изображения снова, так как она слетела в первый вариант
+              */
+              sharp(input)
+                .extract(      
+                  {'left': parseInt(page.ATTR.l), 
+                  'top': parseInt(page.ATTR.t),
+                  'width' : /*1071*/parseInt(page.ATTR.r) - parseInt(page.ATTR.l),
+                  'height': /*92*/parseInt(page.ATTR.b) - parseInt(page.ATTR.t)
+                })
+                  .toFile(
+                    path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ data.batch.page[0].block[31]._+ '/') + data.batch.page[0].block[3]._ 
+                  + '_' + path.parse(item).name + '_' + page.ATTR.blockName + '.png')
+                    .then(data =>{
+                      callback()
+                    })
+                    .catch(err =>{
+                      console.log('Error in toFile: ' + err.message)
+                    });
+
+            });
+    }) 
+    .catch((err)=>{
+      console.log('err in imageCrop[]: '+ err);
+    }); 
 }} 
 
 //функция для энкодинга 

@@ -2,14 +2,17 @@ const express = require('express');
 const path = require('path');
 
 var logger = require('morgan'); //??
-var createError = require('http-errors');//??
+var createError = require('http-errors'); //??
 
 const cookieParser = require('cookie-parser'); //??
 const flash = require('connect-flash');
 const session = require('express-session');
 //let Store = require('express-session').Store //??
 const BetterMemoryStore = require(__dirname + '/memory')
-const store = new BetterMemoryStore({expires: 60*60*1000, debug: true});
+const store = new BetterMemoryStore({
+  expires: 60 * 60 * 1000,
+  debug: true
+});
 
 const bodyParser = require('body-parser');
 //let sharp = require('sharp');
@@ -34,11 +37,16 @@ app.use(session({
 }));
 
 app.use(logger('dev'));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true,
+  limit: '50mb'
+}));
+app.use(bodyParser.json({
+  limit: '50mb'
+}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
- 
+
 app.use('/admin/', adminsRouter);
 app.use('/user/', usersRouter);
 
@@ -46,29 +54,33 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
-app.get('/', mustAuthenticated, (req, res)=> { 
-  res.render('welcome', {user: req.user.username});
+app.get('/', mustAuthenticated, (req, res) => {
+  res.render('welcome', {
+    user: req.user.username
+  });
 });
 
-app.get('*/logout', (req,res)=>{
+app.get('*/logout', (req, res) => {
   req.logout();
   res.redirect('/');
 })
 
-app.post('/', passport.authenticate('local-login',{
+app.post('/', passport.authenticate('local-login', {
   failureRedirect: '/',
   failureFlash: true
-}),(req,res)=>{ 
-    res.render('welcome', {user: req.user.username});
- });
- 
+}), (req, res) => {
+  res.render('welcome', {
+    user: req.user.username
+  });
+});
+
 // catch 404 and forward to error handler
-app.use((req, res, next) =>{
+app.use((req, res, next) => {
   next(createError(404));
 });
 
 // error handler Важно держать в самом низу, иначе поймаёт всё, что не нужно!
-app.use((err, req, res, next)=> {
+app.use((err, req, res, next) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
