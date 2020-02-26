@@ -65,17 +65,18 @@ router.get('/verifycontrol', (req, res) => {
   /*
   Читаем файл с обработанными проектами и предметами, даём их клиенту, 
   чтобы тот смог выбрать, какой проект и предмет он собирается верифицировать
-  */
-  let sql = "select distinct project_name from complete_projects order by 1";
-  pool.execute(sql)
+  */ 
+  let timeInMs = Date.now();
+  pool.execute("select distinct project_name from complete_projects order by 1")
     .then(rows => {
-      console.log("rows: " + rows[0].length + " rows11: " + JSON.stringify(rows[0][0].project_name) + " rows2: " + JSON.stringify(rows[0][0]));
+      //console.log("rows: " + rows[0].length + " rows11: " + JSON.stringify(rows[0][0].project_name) + " rows2: " + JSON.stringify(rows[0][0]));
+      console.log('time for get /verifycontrol: ' + JSON.stringify(Date.now()- timeInMs));
       res.render('verifycontrol', {
         projects: rows[0]
-      }); //, { projects: JSON.stringify(rows[0][0]), subjects: JSON.stringify(rows[0][0]), imgs: JSON.stringify(rows[0][0])});            
+      });            
     })
     .catch(err => {
-      res.send("Ошибка в получении проектов: " + err).status(500);
+      res.status(500).send("Ошибка в получении проектов: " + err);
     });
   //pool.end();
 });
@@ -85,13 +86,15 @@ router.get('/verifycontrol', (req, res) => {
 */
 router.post('/verifycontrol/getSubjects', (req, res) => {
   try {
+    let timeInMs = Date.now();
     console.log('post /get subjects by admin: ' + req.body.project_value);
-    pool.execute("select distinct subject_code from complete_projects where project_name = \"" + req.body.project_value + "\"")
+    pool.execute("select distinct cp.subject_code as subject_code, s.subject_name as subject_name from complete_projects as cp inner join subjects as s on s.subject_code = cp.subject_code where project_name = \"" + req.body.project_value + "\"")
       .then(result => {
+        console.log('time for post /verifycontrol/getSubjects: ' + JSON.stringify(Date.now()- timeInMs));
         res.status(200).send(result[0]);
       })
       .catch(err => {
-        console.log(err);
+        res.status(500).send(err);
       })
   } catch (err) {
     throw err;
@@ -102,19 +105,17 @@ router.post('/verifycontrol/getSubjects', (req, res) => {
 Получение списка изображений на основе выбранного имени проекта и кода предмета
 */
 router.post('/verifycontrol/getImages', (req, res) => {
-  try {
-    console.log('post /get images by admin: ' + req.body.subject_value + ', ' + req.body.project_value);
-    pool.execute("select answers.value as value, count(answers.value) as count from answers where onhand in (0,2) and project_name = \"" + req.body.project_value + "\" and subject_code = " + req.body.subject_value + " group by(answers.value) order by answers.value")
-      .then(imgs => {
-        res.status(200).send(imgs[0]);
-      })
-      .catch(err => {
-        console.error('Ошибка: ' + err);
-        res.status(500);
-      })
-  } catch (err) {
-    console.error('Ошибка: ' + err);
-  }
+  let timeInMs = Date.now();
+  console.log('post /get images by admin: ' + req.body.subject_value + ', ' + req.body.project_value);
+  pool.execute('select answers.value as value, count(answers.value) as count from answers where onhand = 0 and project_name = \'' + req.body.project_value + '\' and subject_code = ' + req.body.subject_value + ' group by(answers.value) order by answers.value')
+    .then(imgs => {
+      console.log('time for post /verifycontrol/getImages: ' + JSON.stringify(Date.now()- timeInMs));
+      res.status(200).send(imgs[0]);
+    })
+    .catch(err => {
+      console.error('Promise-Ошибка: ' + err);
+      res.status(500);
+    }) 
 });
 
 /*
@@ -139,11 +140,12 @@ router.get('/user_list', (req, res) => {
 router.post('/verifycontrol/onhand', (req, res) => {
   let str_vals = JSON.stringify(req.body.values).substring(1, JSON.stringify(req.body.values).length - 1);
   console.log('post onhand: ' + str_vals + 'pr: ' + req.body.project + ' sb: ' + req.body.subject);
-  let values = [];
+  let timeInMs = Date.now();
   //получение списка файлов для верификации
   pool.execute('select distinct * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject + ' order by value limit 500 ')
     .then(rows => {
       console.log('successfully select data');
+      console.log('time for post /verifycontrol/onhand: ' + JSON.stringify(Date.now()- timeInMs));
       res.status(200).send(rows[0]);
       //обновление данных в бд, которые были взяты на контроль
       pool.execute('update answers set onhand = 1 where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject + ' limit 500')
@@ -156,17 +158,27 @@ router.post('/verifycontrol/onhand', (req, res) => {
 
 });
 
-router.post('/verifycontrol/sendResult', (req, res) => {
-  console.log('post(/verifycontrol/sendResult: req.body.img_ids: ' + req.body.img_ids[0] + '; req.body.status: ' + req.body.statuses[0]);
+router.post('/verifycontrol/sendResult', (req, res) => {  
+  console.log('post(/verifycontrol/sendResult');
   for (let i = 0; i < req.body.img_ids.length; i++) {
+    console.log('req.body.img_ids: ' + req.body.img_ids[i] + '; req.body.status: ' + req.body.statuses[i]);
     pool.execute('update answers set onhand = 2, status = ? where id = ?', [req.body.statuses[i], req.body.img_ids[i]]) 
+      .then(() => {
+        pool.execute('select * from answers where status = ? and id = ?', [req.body.statuses[i], req.body.img_ids[i]])
+          .then((rows) => {
+            console.log('id: '+ JSON.stringify(rows[0][0].id) + '; value: ' + JSON.stringify(rows[0][0].value) + '; status: ' + JSON.stringify(rows[0][0].status) + '; onhand: ' + JSON.stringify(rows[0][0].onhand));
+          })
+          .catch(err => {
+            console.log('Произошла ошибка при обновлении данныx : ' + err.message);
+          });
+      })
       .catch(err => {
         console.log('Произошла ошибка при обновлении данныx : ' + err.message);
       });
     //console.log('post(/verifycontrol/sendResult: req.body.img_ids: ' + req.body.img_ids[i] + '; req.body.status: ' + req.body.statuses[i]);
   }
-  res.status(200).send('Work is done.');
-
+  console.log('succesfully update data');
+  res.status(200).send({ response: 'update was successfull' })
 })
 
 module.exports = router;

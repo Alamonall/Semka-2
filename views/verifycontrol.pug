@@ -6,7 +6,7 @@ block content
         +admin-list
         h3 Контроль верификации
         div( class='container-fluid')
-            form(name='projects' action='/admin/verifycontrol/onhand' method='get' )
+            form(action='/admin/verifycontrol/onhand' method='get' )
                 div(class='form-group row')
                         label(class="col-sm-3 col-form-label") Проекты:
                         div(id='projectSelect' class='col-sm-6')
@@ -22,8 +22,7 @@ block content
                             select(id='sbjlst' class="form-control")
                                 option(value='Выберите предмет' selected='selected') Выберите предмет
             div(id='forData')      
-                div
-                    form(id='formForGoToVerifyButtons' action='/admin/verifycontrol/onhand') 
+                div(id='divForGoToVerifyButtons')                    
                 div(id='answersTable')  
         script.
             $(document).ready(function () {
@@ -63,15 +62,17 @@ block content
                         data: 'project_value=' + $("select#prjlst").val(),
                         success: function (data) {
                             $("#sbjlst").remove();
-                            let select = '<select id="sbjlst" class="form-control"><option value="Выбрать предмет" selected="selected">Выбрать предмет</option>'
+                            let select = '<select id="sbjlst" class="form-control"><option value="Выберите предмет" selected="selected">Выбрать предмет</option>'
                             $.each(data, function (key, value) {
-                                select += '<option value=\'' + JSON.stringify(value.subject_code) + '\'>' + JSON.stringify(value.subject_code) + '</option>';
+                                select += '<option value=\'' + JSON.stringify(value.subject_code) + '\'>' + value.subject_name + '</option>';
                             })
                             select += '</select>';
                             $('#subjectSelect').html(select);
                             $('#sbjlst').bind('change', function () {
+                                //Нужно прописать удаление option в sbjlst со значнием "Выберите предмет"
                                 functions.getImages();
                             });
+                            //Удаление таблички с вариантами для верификации. Зачем? Её здесь быть не должно на данном этапе
                             $('#preVerifyControlTable').remove();
                         },
                         error: function () {
@@ -114,13 +115,16 @@ block content
                     }
                     table_body += '</tbody></table>'
                     $('#answersTable').html(table_body);
+                    console.log('answers table bind');
                     //Не работает тема, вернуться и доделать
                     $('#preVerifyControlTable input').bind('click', function () {
                         $(this).css('background-color', 'green');
                     });
-                    let buttons = '<button id=\'goToVerifyButton\' type=\'submit\'  class=\'btn btn-primary\'> Проверить выбранные </button>';
+                    let buttons = '<form id=\'formForGoToVerifyButtons\' action=\'/admin/verifycontrol/onhand\')>'
+                    buttons +=  '<button id=\'goToVerifyButton\' type=\'submit\'  class=\'btn btn-primary\'> Проверить выбранные </button>';
                     buttons += '<button id=\'goToVerifyButtonFirstFifty\' type=\'submit\'  class=\'btn btn-primary\'> Проверить первые 500 </button>';
-                    $('#formForGoToVerifyButtons').html(buttons);
+                    buttons += '</form>'
+                    $('#divForGoToVerifyButtons').html(buttons);
                     $('#goToVerifyButtonFirstFifty').bind('click', function (e) {
                         e.preventDefault();
                         functions.bindGoToVerifyButtonFirstFifty();
@@ -131,12 +135,12 @@ block content
                     });
                 },
 
-                bindGoToVerifyButtonFirstFifty: function () {
-                    $('#prjlst').prop('disabled', true);
-                    $('#sbjlst').prop('disabled', true);
+                bindGoToVerifyButtonFirstFifty: function () {                    
                     let values = $('input[type=\'checkbox\']');
                     console.log('values: ' + values.length);
                     if (values.length) {
+                        $('#prjlst').prop('disabled', true);
+                        $('#sbjlst').prop('disabled', true);
                         let data = new Object();
                         data.values = new Object();
                         data.project = $('#prjlst').val();
@@ -168,20 +172,19 @@ block content
                                 })
                                 darktable += '</tbody></table>'
                                 darktable += '<div><button id="sendResult" class="btn btn-primary">Отправить</button></div>'
-                                $('#forData').html(darktable);
-                                $('#forData').bind('change', function () {
-                                    alert('Что-то изменилось в твоей изни');
-                                })
+                                //Удаление кнопок "отправить на контроль". Не уверен, что удаление это хороший путь, но пока так
+                                $('#formForGoToVerifyButtons').remove();
+                                $('#answersTable').html(darktable); 
                                 $('#verifyControlTable td.img').bind('click', function () {
                                     if ($(this).attr("status") == 0) {
                                         $(this).attr("status", 1);
-                                        $(this).css('background-color', 'blue');
+                                        $(this).css('background-color', 'blue'); //Не грубая ошибка. Status = 1
                                     } else if ($(this).attr("status") == 1) {
                                         $(this).attr("status", 2);
-                                        $(this).css('background-color', 'red');
+                                        $(this).css('background-color', 'red'); //Грубая ошибка. Status = 2
                                     } else if ($(this).attr("status") == 2) {
                                         $(this).attr("status", 0);
-                                        $(this).css('background-color', 'inherit');
+                                        $(this).css('background-color', 'inherit'); //Нет ошибки. Status = 0
                                     }
                                 });
                                 $('#sendResult').bind('click', function (e) {
@@ -198,11 +201,11 @@ block content
                     }
                 },
 
-                bindGoToVerifyButton: function () {
-                    $('#prjlst').prop('disabled', true);
-                    $('#sbjlst').prop('disabled', true);
+                bindGoToVerifyButton: function () {               
                     let values = $("input[type=\'checkbox\']:checked");
                     if (values.length) {
+                        $('#prjlst').prop('disabled', true);
+                        $('#sbjlst').prop('disabled', true);
                         let data = new Object();
                         data.values = new Object();
                         data.project = $('#prjlst').val();
@@ -236,10 +239,9 @@ block content
                                 })
                                 darktable += '</tbody></table>'
                                 darktable += '<div><button id="sendResult" class="btn btn-primary">Отправить</button></div>'
-                                $('#forData').html(darktable);
-                                $('#forData').bind('change', function () {
-                                    alert('Что-то изменилось в твоей изни');
-                                })
+                                //Удаление кнопок "отправить на контроль". Не уверен, что удаление это хороший путь, но пока так
+                                $('#formForGoToVerifyButtons').remove();
+                                $('#answersTable').html(darktable); 
                                 $('#verifyControlTable td.img').bind('click', function () {
                                     if ($(this).attr("status") == 0) {
                                         $(this).attr("status", 1);
@@ -282,7 +284,7 @@ block content
                             data: answers,
                             dataType: 'json',
                             success: function (data) {
-                                console.log('send result success ' + data); //location.href=location.href;
+                                console.log('send result success ' + data.response); //location.href=location.href;
                                 /*
                                 Нужно загрузить страницу с выбранным проектом и предметом
                                 */
@@ -290,9 +292,10 @@ block content
                                 $("#sendResult").remove();
                                 $('#prjlst').prop('disabled', false);
                                 $('#sbjlst').prop('disabled', false);
+                                functions.getImages();
                             },
-                            error: function (err) {
-                                console.log('error in sendresult post: ' + err.message);
+                            error: function (xhr, status, error) {
+                                console.log('error in sendresult post. Status: ' + status + ' Message:' + error);
                             }
                         });
                     }

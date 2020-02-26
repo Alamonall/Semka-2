@@ -33,7 +33,7 @@ let inst = {
   //projects/dir/batches/00000000/
 
   getFiles: function (project_name) {
-   
+    let timeInMs = Date.now();
     let dir = path.join(__dirname, '../projects/', project_name, '/batches/00000000');
     let paths_to_the_aud = fs.readdirSync(dir);
     let aud_list = [];
@@ -140,7 +140,7 @@ let inst = {
           //}       
         })
       }  
-
+    console.log('Time in the end: ' + (timeInMs - Date.now()));
     return true;
 
   } catch (err){
