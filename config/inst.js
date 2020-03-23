@@ -65,7 +65,7 @@ let inst = {
     }
 
     try{
-      var countCroppedImages = 0;
+      let countCroppedImages = 0;
       for(let item of aud_list){
         //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
         let xml_string = readFileSync_encoding(item + '.XML', 'UTF-16');//.replace(/\?\?/,'');
@@ -82,10 +82,16 @@ let inst = {
       }
       console.log('countCroppedImages: ' + countCroppedImages);
              
-      let asyncQueue = async.queue(function(task,callback){
+      let asyncQueue = async.queue(function(task, callback){
         task(callback); 
         //console.log('countCroppedImages: ' + countCroppedImages--);
       },1000);
+
+      asyncQueue.drain(() => {
+          console.log('Time in the end: ' + (Date.now() - timeInMs));
+          console.log('all done');
+      })
+
       for(let item of aud_list){
         //console.log('outfile: ' + path.join(__dirname, 'projects/images/') + path.parse(item).name + '_' + i + '.png');        
         let xml_string = readFileSync_encoding(item + '.XML', 'UTF-16');//.replace(/\?\?/,'');
@@ -96,7 +102,8 @@ let inst = {
             console.error('err in parseString : ' + err);
           else{*/
             for(let i = 0; i < 75; i++){ // число 75 взято от бaлды, лучше будет придумать что-нибудь по-надёжнее 
-              let page = data.batch.page[0].block[i];              
+              let page = data.batch.page[0].block[i];     
+              let code = data.batch.page[0].block[i]         
               if(page._ && !(page.ATTR.blockName.match(/В\d\d/) === 'null' || page.ATTR.blockName.match(/В\d\d/) === null )){                
                 /*console.log('item: ' + item);
                 console.log('page._: ' + page._);
@@ -107,19 +114,21 @@ let inst = {
                 */
                 let sql = 'insert into answers(`status`, `onhand`, `value`, `cropped_image`, `original_image`, `subject_code`, `project_name` , `task`)' 
                   +' values(?, ? , ? , ? , ?, ? ,?, ?);'
-                /*
+                console.log('***************PARSING***************************************');
                 console.log('data.batch.page[0].block[3]._: ' + data.batch.page[0].block[3]._);
-                console.log('image: ' + '\\memory\\' + project_name + '\\images\\'+ data.batch.page[0].block[3]._ + '\\' + data.batch.page[0].block[31]._ + '\\' + data.batch.page[0].block[3]._ + '_' +
+                console.log('data.batch.page[0].block[31]._: ' + data.batch.page[0].block[31]._);
+                console.log('data.batch.page[0].block[1]._: ' + data.batch.page[0].block[1]._);
+                console.log('image: ' + '\\memory\\' + project_name + '\\images\\'+ data.batch.page[0].block[3]._ + '\\' + data.batch.page[0].block[1]._ + '\\' + data.batch.page[0].block[3]._ + '_' +
                  path.parse(item).name + '_' + page.ATTR.blockName + '.png');
-                console.log('')*/
+                console.log('')
                 let insterts = [
                   0,
                   0,
                   page._ ,
-                  '\\memory\\' + project_name + '\\images\\'+ /*код предмета*/ data.batch.page[0].block[3]._ + '\\' + /*штрих-код изображения*/ data.batch.page[0].block[31]._ + '\\' + data.batch.page[0].block[3]._ + '_' +
+                  '\\memory\\' + project_name + '\\images\\'+ /*код предмета*/ data.batch.page[0].block[3]._ + '\\' + /*штрих-код изображения*/ data.batch.page[0].block[1]._ + '\\' + data.batch.page[0].block[3]._ + '_' +
                   path.parse(item).name + '_' + page.ATTR.blockName + '.png',
                   /*полный путь к оригинальному изображению*/ item + '.TIF',
-                  data.batch.page[0].block[3]._,
+                  /*Код предмета*/data.batch.page[0].block[3]._,
                   project_name,
                   /*номер задания*/ page.ATTR.blockName 
                 ];
@@ -128,9 +137,10 @@ let inst = {
 
                 pool.execute('insert into complete_projects(project_name, subject_code) values(?,?)', [project_name, data.batch.page[0].block[3]._]); 
                 
-                mkdir(path.join( __dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ data.batch.page[0].block[31]._+ '/'), {recursive: true })
+                mkdir(path.join( __dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ 
+                  data.batch.page[0].block[1]._+ '/'), {recursive: true })
                   .then(                      
-                      asyncQueue.push( imageCrop(item, data, page, project_name))
+                    asyncQueue.push(imageCrop(item, data, page, project_name))
                   )
                   .catch((err)=>{
                     console.log('mkdir errror: ' + err);
@@ -152,12 +162,12 @@ let inst = {
 //резка изображений
 function imageCrop(item, data, page, project_name){
   return function(callback){
-    /*console.log('********************************************************************');
+    console.log('********************************************************************');
     console.log('item: ' + item);
     console.log('page._: ' + page._);
-    console.log('page.ATTR.blockName): ' + page.ATTR.blockName);
-    console.log('data.batch.page[0].block[31]._: ' + data.batch.page[0].block[31]._);
-    console.log('********************************************************************');*/
+    console.log('page.ATTR.blockName): ' + page.ATTR.blockName);    
+    console.log('data.batch.page[0].block[1]._: ' + data.batch.page[0].block[1]._ );
+    console.log('********************************************************************');
     readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
     .then((input)=>{
         sharp(input)
@@ -168,13 +178,13 @@ function imageCrop(item, data, page, project_name){
             'height': /*92*/parseInt(page.ATTR.b) - parseInt(page.ATTR.t)
           })
           .toFile(
-            path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ data.batch.page[0].block[31]._+ '/') + data.batch.page[0].block[3]._ 
-          + '_' + path.parse(item).name + '_' + page.ATTR.blockName + '.png')
-            .then(data =>{
-              callback()
+            path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/
+             data.batch.page[0].block[1]._+ '/') + data.batch.page[0].block[3]._ + '_' + path.parse(item).name + '_' + page.ATTR.blockName + '.png')
+            .then(() =>{
+              callback();
             })
             .catch(err =>{
-              console.log('Error in toFile: ' + err.message)
+              console.log('Error1 in toFile: ' + err.message);
               /*
               Запускаем резку для данного изображения снова, так как она слетела в первый вариант
               */
@@ -186,13 +196,13 @@ function imageCrop(item, data, page, project_name){
                   'height': /*92*/parseInt(page.ATTR.b) - parseInt(page.ATTR.t)
                 })
                   .toFile(
-                    path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ data.batch.page[0].block[31]._+ '/') + data.batch.page[0].block[3]._ 
+                    path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ data.batch.page[0].block[1]._+ '/') + data.batch.page[0].block[3]._ 
                   + '_' + path.parse(item).name + '_' + page.ATTR.blockName + '.png')
                     .then(data =>{
                       callback()
                     })
                     .catch(err =>{
-                      console.log('Error in toFile: ' + err.message)
+                      console.log('Error2 in toFile: ' + err.message)
                     });
 
             });

@@ -4,29 +4,61 @@ include menu-partial
 
 block content   
     +admin-list
-    h3= title
-    form(method='post' action='/admin/settings')
+    h3= title    
         div(class='container-fluid')                
-            div(class='input-group' )               
-                label(class="col-sm-3 col-form-label") Список проектов:
-                select(name='projects' class="custom-select")
+            form(method='post' action='/admin/settings/cut')
+                div(id='forLoader' class='input-group' )               
+                    label(class="col-sm-3 col-form-label") Список проектов:
+                    select(id='projects' class="form-control")
                         each pr in prs
-                            option(name="each_pr")= pr
+                            option(value=pr)= pr
                         else
-                            option(name="each_null") null               
-                div(class='input-group-append')
-                    button(type='submit' class="btn btn-primary") Резать    
-            div(class="progress")
-                    div(class="progress-bar" role="progressbar" style="width: 25%;"
-                        aria-valuenow="25" aria-valuemin="0" aria-valuemax="100") 25%             
-            div(class='input-group' )
-                label(class="col-sm-3 col-form-label") Пул изображений:
-                input(name='image_pool' type="number" class="form-control" 
-                    aria-label="default" 
-                    aria-describedby="inputGroup-sizing-sm"
-                    value='500'
-                    min='1')
-            div
-                button(type='submit' class="btn btn-primary") Сохранить
-                    
+                            option(value='null') null               
+                    div(class='input-group-append')
+                        button(id="cutTrigger" class="btn btn-primary") Резать    
+                    div(id="loader-identity" class="spinner-border" role="status")
+                        span(class="sr-only") Loading...
+            form(method='post' )
+                div(class='input-group')
+                    label(class="col-sm-3 col-form-label") Пул изображений:
+                    input(name='image_pool' type="number" class="form-control" 
+                        aria-label="default" 
+                        aria-describedby="inputGroup-sizing-sm"
+                        value='500'
+                        min='1')
+                div
+                    button(type='submit' class="btn btn-primary") Сохранить
+    script.
+        $(document).ready(function () {
+            $('#cutTrigger').click(function(e){
+                e.preventDefault();
+                $.ajax({
+                    type: 'post',
+                    url:  '/admin/settings/cut',
+                    data: 'project_to_cut='+ $("select#projects").val(),
+                    beforeSuccess: function(){
+                        showLoaderIdentity();
+                    },
+                    success: function (data) {
+                        hideLoaderIdentity();
+                    },
+                    error: function (err) {
+                        console.log('Шо то не так( ' + err);
+                    }
+            }); 
+        })
+
+        // выводим идентификатор
+        function showLoaderIdentity() 
+        {
+            $("#loader-identity").show("slow") 
+        }
+        
+        // скрываем идентификатор
+        function hideLoaderIdentity() 
+        {
+            $("#loader-identity").hide();  
+        }
+        })
+                
                         

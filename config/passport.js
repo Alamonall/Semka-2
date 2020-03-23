@@ -1,9 +1,5 @@
-// config/passport.js
-
-// load all the things we need
 const LocalStrategy  = require('passport-local').Strategy;
 
-// load up the user model
 const mysql = require('mysql2');
 //const bcrypt = require('bcrypt'); 
 const pool = mysql.createPool({
@@ -85,12 +81,11 @@ module.exports = function(passport) {
     passport.use(
         'local-login',
         new LocalStrategy({
-            // by default, local strategy uses username and password, we will override with email
             usernameField : 'username',
             passwordField : 'password',
             passReqToCallback : true // allows us to pass back the entire request to the callback
         },
-        function(req, username, password, done) { // callback with email and password from our form
+        function(req, username, password, done) { // callback with username and password from our form
            
             pool.execute("SELECT * FROM users WHERE username = ?",[username], function(err, rows){
                 if (err)
@@ -100,7 +95,7 @@ module.exports = function(passport) {
                 }
 
                 // if the user is found but the password is wrong
-                console.log('pass: ' + password + '; pass2: '+ rows[0].password);
+                //console.log('pass: ' + password + '; pass2: '+ rows[0].password);
                 if (!(password == rows[0].password))
                     return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.')); // create the loginMessage and save it to session as flashdata
 

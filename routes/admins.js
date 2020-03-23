@@ -46,13 +46,16 @@ router.get('/settings', (req, res) => {
 });
 0.
 
-router.post('/settings', (req, res) => {
+router.post('/settings/cut', (req, res) => {
   //при запуске запустить прогрессбар для резки проекта
-  //указываем абсолютный путь к проекту и папкам с изображениями    
+  //указываем абсолютный путь к проекту и папкам с изображениями      
   try {
+    console.log('post /settings/cut req.body.project_to_cut: ' + req.body.project_to_cut);
     //резка изображений
     //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
-    inst.getFiles(req.body['projects']) ? res.redirect('/admin/settings') : res.send("Ошибка в резке изображений").status('500');
+    req.body.project_to_cut ? 
+      inst.getFiles(req.body.project_to_cut) ? res.redirect('/admin/settings') : res.status('500').send("Ошибка в резке изображений")
+    : res.status('500').send("Проблема с project_to_cut, которая " + req.body.project_to_cut);
     /*Получаем JSOn проекта со списком предметов внутри и порезанными изображениями
       Далее смотрим, есть ли файл со списком обработанных проектов, проверяем на существование только что обработанного и,
        либо записываем его, если не нашли, либо пропускаем эту часть*/

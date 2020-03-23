@@ -5,8 +5,8 @@ include menu-partial
 block content   
         +admin-list
         h3 Контроль верификации
-        div( class='container-fluid')
-            form(action='/admin/verifycontrol/onhand' method='get' )
+        div(class='container-fluid')
+            form(method='get' action='/admin/verifycontrol/onhand')
                 div(class='form-group row')
                         label(class="col-sm-3 col-form-label") Проекты:
                         div(id='projectSelect' class='col-sm-6')

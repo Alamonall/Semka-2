@@ -1,42 +1,32 @@
 const express = require('express');
 const path = require('path');
-
-var logger = require('morgan'); //??
+const passport = require('passport');
+  require('./config/passport')(passport);
+const logger = require('morgan'); //логи get и post запросов выдаёт в консоль 
 var createError = require('http-errors'); //??
-
-const cookieParser = require('cookie-parser'); //??
-const flash = require('connect-flash');
-const session = require('express-session');
-//let Store = require('express-session').Store //??
-const BetterMemoryStore = require(__dirname + '/memory')
-const store = new BetterMemoryStore({
-  expires: 60 * 60 * 1000,
-  debug: true
-});
-
+const flash = require('connect-flash');// для подписей при неудачной авторизации
 const bodyParser = require('body-parser');
-//let sharp = require('sharp');
+var session = require('express-session');
+
+const app = express();
 
 const adminsRouter = require('./routes/admins');
 const usersRouter = require('./routes/users');
-const passport = require('passport');
-require('./config/passport')(passport);
-
-const app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-app.use(session({
-  name: 'hrsession',
-  secret: 'hrsecret',
-  store: store,
-  resave: true,
-  saveUninitialized: true
-}));
-
 app.use(logger('dev'));
+app.use(session(
+  {cookie: {
+     maxAge: 60000 }, 
+  secret: 'woot',
+  resave: true, 
+  rolling: true,
+  saveUninitialized: false})
+);
+
 app.use(bodyParser.urlencoded({
   extended: true,
   limit: '50mb'
@@ -44,7 +34,7 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json({
   limit: '50mb'
 }));
-app.use(cookieParser());
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/admin/', adminsRouter);
@@ -54,12 +44,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
-app.get('/', mustAuthenticated, (req, res) => {
-  res.render('welcome', {
-    user: req.user.username
-  });
+app.get('/', (req, res) => {
+  req.flash('info','my bad, bad girlfriend!');
+  res.render('index', {expressFlash: req.flash('info', 'my good, good girlfriend!') });
 });
-
+  
 app.get('*/logout', (req, res) => {
   req.logout();
   res.redirect('/');
