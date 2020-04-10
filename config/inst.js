@@ -3,7 +3,9 @@ let sharp = require('sharp');
 let path = require('path');
 let xml2js = require('xml2js');
 let iconvlite = require('iconv-lite');
+
 let xmlBuilder = require('xmlbuilder');
+
 let parser = new xml2js.Parser({ attrkey: "ATTR" });
 const util = require('util');
 const mysql = require("mysql2");
@@ -90,6 +92,7 @@ let inst = {
       asyncQueue.drain(() => {
           console.log('Time in the end: ' + (Date.now() - timeInMs));
           console.log('all done');
+          return true;
       })
 
       for(let item of aud_list){
@@ -98,9 +101,9 @@ let inst = {
         
         //вытаскиваем из файлов необходимые данные
         parser.parseString(xml_string, (err,data) => {
-          /*if(err)
+          if(err)
             console.error('err in parseString : ' + err);
-          else{*/
+          //else{
             for(let i = 0; i < 75; i++){ // число 75 взято от бaлды, лучше будет придумать что-нибудь по-надёжнее 
               let page = data.batch.page[0].block[i];     
               let code = data.batch.page[0].block[i]         
@@ -151,7 +154,6 @@ let inst = {
         })
       }  
     console.log('Time in the end: ' + (timeInMs - Date.now()));
-    return true;
 
   } catch (err){
       console.error('Ошибка: ' + err);
@@ -190,19 +192,21 @@ function imageCrop(item, data, page, project_name){
               */
               sharp(input)
                 .extract(      
-                  {'left': parseInt(page.ATTR.l), 
-                  'top': parseInt(page.ATTR.t),
-                  'width' : /*1071*/parseInt(page.ATTR.r) - parseInt(page.ATTR.l),
-                  'height': /*92*/parseInt(page.ATTR.b) - parseInt(page.ATTR.t)
-                })
+                  {
+                    'left': parseInt(page.ATTR.l,10), 
+                    'top': parseInt(page.ATTR.t,10),
+                    'width' : /*1071*/parseInt(page.ATTR.r,10) - parseInt(page.ATTR.l,10),
+                    'height': /*92*/parseInt(page.ATTR.b,10) - parseInt(page.ATTR.t,10)
+                  })
                   .toFile(
                     path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ data.batch.page[0].block[1]._+ '/') + data.batch.page[0].block[3]._ 
                   + '_' + path.parse(item).name + '_' + page.ATTR.blockName + '.png')
-                    .then(data =>{
-                      callback()
+                    .then(() =>{
+                      callback();
                     })
                     .catch(err =>{
-                      console.log('Error2 in toFile: ' + err.message)
+                      fs.writeFileSync('log.txt',err.message);
+                      console.log('Error2 in toFile: ' + JSON.stringify(err.message));
                     });
 
             });

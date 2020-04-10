@@ -25,12 +25,12 @@ block content
                 div(id='divForGoToVerifyButtons')                    
                 div(id='answersTable')  
         script.
-            $(document).ready(function () {
+            $(document).ready(function () { 
                 $("#prjlst").change(function () {
                     functions.getSubjects();
                     console.log('$("select#sbjlst").val():' + $("select#sbjlst").val());
                 });
-            })
+            });
 
             const functions = {
                 /*
@@ -61,12 +61,13 @@ block content
                         url: '/admin/verifycontrol/getSubjects',
                         data: 'project_value=' + $("select#prjlst").val(),
                         success: function (data) {
-                            $("#sbjlst").remove();
-                            let select = '<select id="sbjlst" class="form-control"><option value="Выберите предмет" selected="selected">Выбрать предмет</option>'
+                            //$("#sbjlst").remove();
+                            let select = '<select id="sbjlst" class="form-control"><option value="Выберите предмет" selected="selected">Выберите предмет</option>';
                             $.each(data, function (key, value) {
                                 select += '<option value=\'' + JSON.stringify(value.subject_code) + '\'>' + value.subject_name + '</option>';
                             })
                             select += '</select>';
+                            $('#prjlst option[value=\'Выберите проект\'').remove();
                             $('#subjectSelect').html(select);
                             $('#sbjlst').bind('change', function () {
                                 //Нужно прописать удаление option в sbjlst со значнием "Выберите предмет"
@@ -114,6 +115,7 @@ block content
                         table_body += '</tr>';
                     }
                     table_body += '</tbody></table>'
+                    $('#sbjlst option[value=\'Выберите предмет\'').remove();
                     $('#answersTable').html(table_body);
                     console.log('answers table bind');
                     //Не работает тема, вернуться и доделать
@@ -220,48 +222,57 @@ block content
                             data: data,
                             dataType: 'json',
                             success: function (data) {
-                                let darktable = '<table id="verifyControlTable" class="table table-hover table-bordered">';
-                                darktable += '<tbody>';
-                                console.log(data);
-                                $.each(data, function (key, value) {
-                                    darktable += '<tr height="110"><th class="info" scrope="row">' + key + '</th>';
-                                    darktable += '<td class="info" scrope="row">' + value.value + '</td>';
-                                    darktable += '<td class="img" status="0" id=\'' + value.id + '\'><a href="2.html" target="_blank" ><img src=\'' + value.cropped_image + '\' alt=\'Изображение со значением: ' + value.value + '\' height="92" width="1071"/></a>';
-                                    darktable += '</td>';
-                                    darktable += '<td><ul class="list-unstyled">';
-                                    darktable += '<li>' + 'Задание: ' + value.task + '</li>'
-                                    darktable += '<li>' + 'ФИО:' + '</li>'
-                                    darktable += '<li>' + 'Никнейм:' + '</li>'
-                                    darktable += '<li><a href="' + value.original_image + '">Ссылка на бланк</a></li>'
-                                    '</ul></td>'
-                                    darktable += '</tr>';
+                                if(data.length == 0){
+                                    $("#verifyControlTable").remove();
+                                    $("#sendResult").remove();
+                                    $('#prjlst').prop('disabled', false);
+                                    $('#sbjlst').prop('disabled', false);
+                                    functions.getImages();
+                                }
+                                else {
+                                        let darktable = '<table id="verifyControlTable" class="table table-hover table-bordered">';
+                                        darktable += '<tbody>';
+                                        console.log(data);
+                                        $.each(data, function (key, value) {
+                                            darktable += '<tr height="110"><th class="info" scrope="row">' + key + '</th>';
+                                            darktable += '<td class="info" scrope="row">' + value.value + '</td>';
+                                            darktable += '<td class="img" status="0" id=\'' + value.id + '\'><a href="2.html" target="_blank" ><img src=\'' + value.cropped_image + '\' alt=\'Изображение со значением: ' + value.value + '\' height="92" width="1071"/></a>';
+                                            darktable += '</td>';
+                                            darktable += '<td><ul class="list-unstyled">';
+                                            darktable += '<li>' + 'Задание: ' + value.task + '</li>'
+                                            darktable += '<li>' + 'ФИО:' + '</li>'
+                                            darktable += '<li>' + 'Никнейм:' + '</li>'
+                                            darktable += '<li><a href="' + value.original_image + '">Ссылка на бланк</a></li>'
+                                            '</ul></td>'
+                                            darktable += '</tr>';
 
-                                })
-                                darktable += '</tbody></table>'
-                                darktable += '<div><button id="sendResult" class="btn btn-primary">Отправить</button></div>'
-                                //Удаление кнопок "отправить на контроль". Не уверен, что удаление это хороший путь, но пока так
-                                $('#formForGoToVerifyButtons').remove();
-                                $('#answersTable').html(darktable); 
-                                $('#verifyControlTable td.img').bind('click', function () {
-                                    if ($(this).attr("status") == 0) {
-                                        $(this).attr("status", 1);
-                                        $(this).css('background-color', 'blue');
-                                    } else if ($(this).attr("status") == 1) {
-                                        $(this).attr("status", 2);
-                                        $(this).css('background-color', 'red');
-                                    } else if ($(this).attr("status") == 2) {
-                                        $(this).attr("status", 0);
-                                        $(this).css('background-color', 'inherit');
+                                        })
+                                        darktable += '</tbody></table>'
+                                        darktable += '<div><button id="sendResult" class="btn btn-primary">Отправить</button></div>'
+                                        //Удаление кнопок "отправить на контроль". Не уверен, что удаление это хороший путь, но пока так
+                                        $('#formForGoToVerifyButtons').remove();
+                                        $('#answersTable').html(darktable); 
+                                        $('#verifyControlTable td.img').bind('click', function () {
+                                            if ($(this).attr("status") == 0) {
+                                                $(this).attr("status", 1);
+                                                $(this).css('background-color', 'blue');
+                                            } else if ($(this).attr("status") == 1) {
+                                                $(this).attr("status", 2);
+                                                $(this).css('background-color', 'red');
+                                            } else if ($(this).attr("status") == 2) {
+                                                $(this).attr("status", 0);
+                                                $(this).css('background-color', 'inherit');
+                                            }
+                                        });
+                                        $('#sendResult').bind('click', function (e) {
+                                            e.preventDefault();
+                                            functions.bindSendResultsButton();
+                                        });
                                     }
-                                });
-                                $('#sendResult').bind('click', function (e) {
-                                    e.preventDefault();
-                                    functions.bindSendResultsButton();
-                                });
-                            },
-                            error: function (err) {
-                                alert('something goes wrong ' + err);
-                            }
+                                },
+                                error: function (err) {
+                                    alert('something goes wrong ' + err);
+                                }
                         })
                     } else {
                         alert('Не выбраны данные для проверки');
@@ -298,6 +309,12 @@ block content
                                 console.log('error in sendresult post. Status: ' + status + ' Message:' + error);
                             }
                         });
+                    } else{
+                        $("#verifyControlTable").remove();
+                        $("#sendResult").remove();
+                        $('#prjlst').prop('disabled', false);
+                        $('#sbjlst').prop('disabled', false);
+                        functions.getImages();
                     }
                 }
             }

@@ -12,12 +12,18 @@ block content
                   th(scope='col') Ник
                   th(scope='col') Имя
                   th(scope='col') Роль
+                  th(scope='col') Активность
                 tbody
                  each user in users
                   tr
                    td= user.username
                    td= user.surname + ' ' + user.name + ' ' + user.secondname
                    td= user.privileges
+                   td= user.activity 
+        script.
+          $(document).ready(function () {
+
+          })
                    
                  
 

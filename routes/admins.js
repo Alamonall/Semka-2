@@ -129,7 +129,8 @@ router.get('/user_list', (req, res) => {
     .then(rows =>
       res.render('user_list', {
         title: 'Список пользователей',
-        users: rows[0]
+        users: rows[0],
+        activity: 'req.user.username'
       })
     )
     .catch(err => {
@@ -145,7 +146,7 @@ router.post('/verifycontrol/onhand', (req, res) => {
   console.log('post onhand: ' + str_vals + 'pr: ' + req.body.project + ' sb: ' + req.body.subject);
   let timeInMs = Date.now();
   //получение списка файлов для верификации
-  pool.execute('select distinct * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject + ' order by value limit 500 ')
+  pool.execute('select distinct * from answers where value in ( ' + str_vals + ') and project_name = \'' + req.body.project + '\' and subject_code = ' + req.body.subject + ' and onhand = 0 order by value limit 500 ')
     .then(rows => {
       console.log('successfully select data');
       console.log('time for post /verifycontrol/onhand: ' + JSON.stringify(Date.now()- timeInMs));
@@ -162,14 +163,14 @@ router.post('/verifycontrol/onhand', (req, res) => {
 });
 
 router.post('/verifycontrol/sendResult', (req, res) => {  
-  console.log('post(/verifycontrol/sendResult');
+  console.log('post(/verifycontrol/sendResult: req.body.img_ids.length = '+ req.body.img_ids.length);
   for (let i = 0; i < req.body.img_ids.length; i++) {
     console.log('req.body.img_ids: ' + req.body.img_ids[i] + '; req.body.status: ' + req.body.statuses[i]);
     pool.execute('update answers set onhand = 2, status = ? where id = ?', [req.body.statuses[i], req.body.img_ids[i]]) 
       .then(() => {
         pool.execute('select * from answers where status = ? and id = ?', [req.body.statuses[i], req.body.img_ids[i]])
           .then((rows) => {
-            console.log('id: '+ JSON.stringify(rows[0][0].id) + '; value: ' + JSON.stringify(rows[0][0].value) + '; status: ' + JSON.stringify(rows[0][0].status) + '; onhand: ' + JSON.stringify(rows[0][0].onhand));
+            //console.log('id: '+ JSON.stringify(rows[0][0].id) + '; value: ' + JSON.stringify(rows[0][0].value) + '; status: ' + JSON.stringify(rows[0][0].status) + '; onhand: ' + JSON.stringify(rows[0][0].onhand));
           })
           .catch(err => {
             console.log('Произошла ошибка при обновлении данныx : ' + err.message);
@@ -182,6 +183,7 @@ router.post('/verifycontrol/sendResult', (req, res) => {
   }
   console.log('succesfully update data');
   res.status(200).send({ response: 'update was successfull' })
-})
+
+});
 
 module.exports = router;

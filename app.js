@@ -63,6 +63,8 @@ app.post('/', passport.authenticate('local-login', {
   });
 });
 
+
+
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
   next(createError(404));
