@@ -6,6 +6,7 @@ let fs = require('fs');
 let inst = require('../config/inst.js');
 let mysql = require("mysql2");
 const passport = require('passport');
+
 //require('./config/passport')(passport);
 
 const authenticate = passport.authenticate('local-login', {
@@ -29,19 +30,36 @@ router.all('/admin/*', authenticate, (req, res, next) => {
 });
 
 router.get('/admin', (req, res) => {
-  res.render('admin', {
-    title: 'Здесь вы можете проверить верификацию'
+  pool.execute("select distinct project_name from complete_projects order by 1")
+    .then(rows => {
+      res.render('admin', {
+        projects: rows[0]
+      });            
+    })
+    .catch(err => {
+      res.status(500).send("Ошибка в получении проектов: " + err);
+    });
+});
+
+router.post('/deleteProject', (req,res) => {
+  pool.execute('delete from complete_projects where project_name =\'' + req.body.project_name+ '\'')
+  .catch((err)=>{
+    res.status(500).send('Что-то пошло не так и проект скорей всего не удалён' + err);
   });
+  pool.execute('delete from answers where project_name =\'' + req.body.project_name+ '\'')
+  .catch((err)=>{
+    res.status(500).send('Что-то пошло не так и проект скорей всего не удалён' + err);
+  });
+  res.status(200).send('Проект удалён');
 });
 
 router.get('/settings', (req, res) => {
   process.stdout.write("\033c");
   process.stdout.write("\033c");
   //выгружать индексированный список с проверкой, есть ли всё ещё проект в папке или был удалён/изменён/перезапущен
-  inst.dirTree('.\\projects');
   res.render('settings', {
     title: 'Здесь можно настроить всё',
-    prs: inst.dirTree('.\\projects')
+    prs: inst.GetListProjectsForCutting('.\\projects')
   });
 });
 0.
@@ -54,8 +72,8 @@ router.post('/settings/cut', (req, res) => {
     //резка изображений
     //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
     req.body.project_to_cut ? 
-      inst.getFiles(req.body.project_to_cut) ? res.redirect('/admin/settings') : res.status('500').send("Ошибка в резке изображений")
-    : res.status('500').send("Проблема с project_to_cut, которая " + req.body.project_to_cut);
+      inst.ImageCutting(req.body.project_to_cut) ? res.redirect('/admin/settings') : res.status('500').send("Ошибка в резке изображений")
+      : res.status('500').send("Проблема с project_to_cut, которая " + req.body.project_to_cut);
     /*Получаем JSOn проекта со списком предметов внутри и порезанными изображениями
       Далее смотрим, есть ли файл со списком обработанных проектов, проверяем на существование только что обработанного и,
        либо записываем его, если не нашли, либо пропускаем эту часть*/
@@ -81,7 +99,7 @@ router.get('/verifycontrol', (req, res) => {
     .catch(err => {
       res.status(500).send("Ошибка в получении проектов: " + err);
     });
-  //pool.end();
+  pool.end();
 });
 
 /*

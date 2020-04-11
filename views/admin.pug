@@ -4,4 +4,32 @@ include menu-partial
 
 block content   
         +admin-list
-        h3 Welcome to the Admin!
+        div(class='container-fluid')
+                div(class='form-group row')
+                        label(class="col-sm-3 col-form-label") Проекты:
+                        div(id='projectSelect' class='col-sm-6')
+                            select(id='prjlst' class="form-control") 
+                                each project in projects
+                                    option(value=project.project_name)= project.project_name
+                                else
+                                    option(value='Проектов нет' selected='selected') Проектов нет               
+                        div(class='input-group-append')
+                                button(id="deleteProject" class="btn btn-primary") Удалить    
+        script.
+                $(document).ready(function(){
+                        $('#deleteProject').click(function(){
+                                let pr_to_send = $("select#prjlst").val();
+                                if(!!pr_to_send){
+                                        $.post('/admin/deleteProject', {project_name: pr_to_send})
+                                                .done(function(res){
+                                                        $('#prjlst option[value=\''+pr_to_send+'\']').remove();
+                                                        console.log('success: ' + res);
+                                                })
+                                                .fail(function(err){
+                                                        console.log(err.status + ': ' + err.statusText);
+                                                });
+                                        }
+                        });
+                });
+                              
+        

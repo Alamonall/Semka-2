@@ -67,7 +67,7 @@ block content
                                 select += '<option value=\'' + JSON.stringify(value.subject_code) + '\'>' + value.subject_name + '</option>';
                             })
                             select += '</select>';
-                            $('#prjlst option[value=\'Выберите проект\'').remove();
+                            $('#prjlst option[value=\'Выберите проект\']').remove();
                             $('#subjectSelect').html(select);
                             $('#sbjlst').bind('change', function () {
                                 //Нужно прописать удаление option в sbjlst со значнием "Выберите предмет"
