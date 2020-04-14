@@ -2,8 +2,10 @@ extends layout
 
 include menu-partial 
 
-block content   
-    //div(id='myLoader')        
+block content    
+    div(id='loaderForCropping' class="d-flex justify-content-center")
+        div(class="spinner-border" role="status")
+            span(class="sr-only") Loading...
     +admin-list
     h3= title    
         div(class='container-fluid')                
@@ -31,6 +33,7 @@ block content
         $(document).ready(function () {
             $('#cutTrigger').click(function(e){
                 e.preventDefault();
+                
                 $.ajax({
                     type: 'post',
                     url:  '/admin/settings/cut',

@@ -90,8 +90,6 @@ router.get('/verifycontrol', (req, res) => {
   let timeInMs = Date.now();
   pool.execute("select distinct project_name from complete_projects order by 1")
     .then(rows => {
-      //console.log("rows: " + rows[0].length + " rows11: " + JSON.stringify(rows[0][0].project_name) + " rows2: " + JSON.stringify(rows[0][0]));
-      console.log('time for get /verifycontrol: ' + JSON.stringify(Date.now()- timeInMs));
       res.render('verifycontrol', {
         projects: rows[0]
       });            
@@ -99,7 +97,6 @@ router.get('/verifycontrol', (req, res) => {
     .catch(err => {
       res.status(500).send("Ошибка в получении проектов: " + err);
     });
-  pool.end();
 });
 
 /*

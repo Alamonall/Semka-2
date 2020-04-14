@@ -40,7 +40,6 @@ let inst = {
       user: 'root',
       database: 'ver_db',
       password: 'Adminspassword',
-      port: 3306
     }).promise();
 
     //создание папки с проектом, если её нет
@@ -115,22 +114,31 @@ let inst = {
               ];    
               
               pool.execute(sql, insterts)
+                .then(() =>{
+                  pool.execute('select * from answers where project_name = \'' + project_name +'\' and subject_Code = \'' + data.batch.page[0].block[3]._+ '\' and task = \'' + page.ATTR.blockName + '\'')
+                    .then(row => {
+                      //console.log('row[0].value: ' + row[0]);
+                    })
+                    .catch((err)=>{
+                      console.log('error in select * from answers ' + err.message);
+                    })
+                })
                 .catch((err)=>{
                   console.log('error3: ' + err.message);
                 });
 
               mkdir(path.join( __dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/ 
                 data.batch.page[0].block[1]._+ '/'), {recursive: true })
-                .then(                      
+                .then(()=>{                      
                   asyncQueue.push(ImageCrop(item, data, page, project_name))
                     .catch((err)=>{
                       console.log('error in asyncQueue: ' + err);
-                    })
-                  )
+                    });
+                })
                 .catch((err)=>{
                   console.log('mkdir errror: ' + err);
                 });
-
+            
             }
           } 
 
@@ -141,14 +149,12 @@ let inst = {
             });
       })
     }  
-  console.log('Time in the end: ' + (timeInMs - Date.now()));
-
   }, 
 }
  
 //резка изображений
 function ImageCrop(item, data, page, project_name){
-  return function(callback){
+  return async function(callback){
     /*console.log('********************************************************************');
     console.log('item: ' + item);
     console.log('page._: ' + page._);
@@ -157,24 +163,27 @@ function ImageCrop(item, data, page, project_name){
     console.log('********************************************************************');*/
     //if(data.batch.page[0].block[1]._ == '2010100011514' && page.ATTR.blockName =='Замена_ответ_В02')
     //  console.log('breakpoint');
-      
-    readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
-      .then((input)=>{
-          sharp(input)
+    let croppedImage = path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/
+    data.batch.page[0].block[1]._+ '/') + data.batch.page[0].block[3]._ + '_' + path.parse(item).name + '_' + page.ATTR.blockName + '.png';
+
+    await readFile(item + '.' + (item + '.TIF').match(/TIF|TIFF/))
+      .then((originalImage)=>{
+          sharp(originalImage)
             .extract(      
-              {'left': parseInt(page.ATTR.l), 
-              'top': parseInt(page.ATTR.t),
-              'width' : /*1071*/parseInt(page.ATTR.r) - parseInt(page.ATTR.l),
-              'height': /*92*/parseInt(page.ATTR.b) - parseInt(page.ATTR.t)
+              {'left': parseInt(page.ATTR.l,10), 
+              'top': parseInt(page.ATTR.t,10),
+              'width' : /*1071*/parseInt(page.ATTR.r,10) - parseInt(page.ATTR.l,10),
+              'height': /*92*/parseInt(page.ATTR.b,10) - parseInt(page.ATTR.t,10)
             })
-            .toFile(
-              path.join(__dirname, '../public/memory/', project_name, '/images/', data.batch.page[0].block[3]._, '/', /*штрих-код изображения*/
-              data.batch.page[0].block[1]._+ '/') + data.batch.page[0].block[3]._ + '_' + path.parse(item).name + '_' + page.ATTR.blockName + '.png')
+            .toFile(croppedImage)
               .then(() =>{
                 callback();
               })
               .catch(err =>{
-                console.log('Error1 in toFile: ' + err.message);
+                console.log('Error1 in toFile: ' + err.message + '; left: ' + parseInt(page.ATTR.l) + '; top: ' + parseInt(page.ATTR.t,10) + 
+                  '; width: ' + (parseInt(page.ATTR.r,10) - parseInt(page.ATTR.l,10)) + '; height: '+ (parseInt(page.ATTR.b,10) - parseInt(page.ATTR.t,10)) + '; original image: ' + item
+                    +'; cropped image: ' + croppedImage +'\n');
+
                 /*
                 Запускаем резку для данного изображения снова, так как она слетела в первый вариант
                 */

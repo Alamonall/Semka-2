@@ -38,5 +38,20 @@
   },
   "devDependencies": {
     "nodemon": "^1.19.2"
-  }
+  },
+  "main": "app.js",
+  "bin": {
+    "semka1": "www.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alamonall/Semka-2.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Alamonall/Semka-2/issues"
+  },
+  "homepage": "https://github.com/Alamonall/Semka-2#readme",
+  "description": ""
 }
