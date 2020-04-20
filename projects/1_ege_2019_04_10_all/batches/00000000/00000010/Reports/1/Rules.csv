@@ -1,8 +1,0 @@
-"RULE_ID";"RULE_NAME";"RULE_TYPE";"RULE_CERTAIN";"RULE_ENABLED";"RULE_TYPE_NAME"
-"144445";"Регион";"CRegularExpressionRule";"0";"1";"Регулярное выражение"
-"144448";"МCУ";"CRegularExpressionRule";"0";"1";"Регулярное выражение"
-"144451";"ППЭ";"CRegularExpressionRule";"0";"1";"Регулярное выражение"
-"144454";"Дата_экз";"CDateNormalizerRule";"0";"1";"Нормализация и проверка даты"
-"144457";"Регистрационный код";"CRegularExpressionRule";"0";"1";"Регулярное выражение"
-"144460";"Метки_1.1";"CExpressionRule";"0";"0";"Проверка с условием"
-"144463";"IDCode";"CRegularExpressionRule";"0";"1";"Регулярное выражение"

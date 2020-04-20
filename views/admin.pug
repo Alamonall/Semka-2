@@ -3,33 +3,46 @@ extends layout
 include menu-partial 
 
 block content   
-        +admin-list
-        div(class='container-fluid')
-                div(class='form-group row')
-                        label(class="col-sm-3 col-form-label") Проекты:
-                        div(id='projectSelect' class='col-sm-6')
-                            select(id='prjlst' class="form-control") 
-                                each project in projects
-                                    option(value=project.project_name)= project.project_name
-                                else
-                                    option(value='Проектов нет' selected='selected') Проектов нет               
-                        div(class='input-group-append')
-                                button(id="deleteProject" class="btn btn-primary") Удалить    
-        script.
-                $(document).ready(function(){
-                        $('#deleteProject').click(function(){
-                                let pr_to_send = $("select#prjlst").val();
-                                if(!!pr_to_send){
-                                        $.post('/admin/deleteProject', {project_name: pr_to_send})
-                                                .done(function(res){
-                                                        $('#prjlst option[value=\''+pr_to_send+'\']').remove();
-                                                        console.log('success: ' + res);
-                                                })
-                                                .fail(function(err){
-                                                        console.log(err.status + ': ' + err.statusText);
-                                                });
-                                        }
-                        });
-                });
-                              
-        
+	+admin-list
+	div(class='container-fluid')
+		table(class='table table-bordered')
+			thead
+				tr
+					th(scope='col') #
+					th(scope='col') Ник
+					th(scope='col') ФИО
+					th(scope='col') Роль
+					th(scope='col') Не закончены
+					th(scope='col') Закончены
+					th(scope='col') Грубые ошибки
+					th(scope='col') Негрубые ошибки
+			tbody(id='usersTable')
+				each user in users
+					tr(class='user' value=user.userId)
+						td= user.userId
+						td= user.userName
+						td= user.fio
+						td= user.privileges
+						td= user.notFinishedAnswersCount
+						td= user.finishedAnswersCount
+						td= user.bigMistakeCount 
+						td= user.smallMistakeCount 
+						td
+							button(onclick='clearNotFinishedAnswersData(' +user.userId+ ')' class="btn btn-light") Очистить
+						td
+							button(onclick='deleteUser(' + user.userId + ')' class="btn btn-light") Удалить пользователя  
+	script.
+		$(document).ready(function () { 
+
+			
+		});
+
+		function deleteUser(userId){
+
+		};
+
+		function clearNotFinishedAnswersData(userId){
+
+		};
+
+

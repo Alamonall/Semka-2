@@ -2,42 +2,72 @@ extends layout
 
 include menu-partial 
 
-block content    
-    div(id='loaderForCropping' class="d-flex justify-content-center")
-        div(class="spinner-border" role="status")
-            span(class="sr-only") Loading...
+block content        
     +admin-list
     h3= title    
-        div(class='container-fluid')                
-            form(method='post' action='/admin/settings/cut')
-                div(id='forLoader' class='input-group' )               
-                    label(class="col-sm-3 col-form-label") Список проектов:
-                    select(id='projects' class="form-control")
-                        each pr in prs
-                            option(value=pr)= pr
-                        else
-                            option(value='null') null               
-                    div(class='input-group-append')
-                        button(id="cutTrigger" class="btn btn-primary") Резать  
-            form(method='post' )
-                div(class='input-group')
-                    label(class="col-sm-3 col-form-label") Пул изображений:
-                    input(name='image_pool' type="number" class="form-control" 
-                        aria-label="default" 
-                        aria-describedby="inputGroup-sizing-sm"
-                        value='500'
-                        min='1')
-                div
-                    button(type='submit' class="btn btn-primary") Сохранить
+        div(class='container-fluid')    
+            table.table.table-bordered
+                tbody
+                    tr
+                        th(scope='row') Проекты для резки:
+                        td 
+                            select(class='custom-select my-1 mr-sm-2' id='projectsToCut' )
+                                each pr in projectsToCut
+                                    option(value=pr)= pr
+                                else
+                                    option(value='null') null  
+                        td 
+                            button(id="cutProject" class="btn btn-primary") Резать   
+                    tr
+                        th(scope='row') Пул изображений:
+                        td 
+                            input(id='imagePool' type='number' class='form-control'
+                                aria-label="default" 
+                                aria-describedby="inputGroup-sizing-sm"
+                                value= imagePool
+                                min='1')
+                        td 
+                            button(id='saveImagePoolValue' class="btn btn-primary") Сохранить
+                    tr
+                        th(scope='row') Удаление проектов:
+                        td 
+                            select(class='custom-select my-1 mr-sm-2' id='projectsToDelete') 
+                                each pr in projectsToDelete
+                                    option(value=pr.project_name)= pr.project_name
+                                else
+                                    option(value='Проектов нет' selected='selected') Проектов нет  
+                        td 
+                            button(id="deleteProject" class="btn btn-primary") Удалить   
+                    tr
+                        th(scope='row') Выгрузка проектов:
+                        td 
+                            select(class='custom-select my-1 mr-sm-2' id='resultOfVerification') 
+                                each pr in projectsForResult
+                                    option(value=pr.project_name)= pr.project_name
+                                else
+                                    option(value='Проектов нет' selected='selected') Проектов нет  
+                        td 
+                            button(id="getTheResult" class="btn btn-primary") Результаты    
     script.
         $(document).ready(function () {
-            $('#cutTrigger').click(function(e){
-                e.preventDefault();
-                
+            $('#saveImagePoolValue').click(function(e){
+                e.preventDefault();                
                 $.ajax({
                     type: 'post',
-                    url:  '/admin/settings/cut',
-                    data: 'project_to_cut='+ $("select#projects").val(),
+                    url:  '/admin/settings/saveImagePool',
+                    data: 'imagePool='+ $("input#imagePool").val(),
+                    error: function (err) {
+                        console.log('Шо то не так( ' + err);
+                    }
+                });
+            });
+
+            $('#cutProject').click(function(e){
+                e.preventDefault();                
+                $.ajax({
+                    type: 'post',
+                    url:  '/admin/settings/cutProject',
+                    data: 'projectToCut='+ $("select#projectsToCut").val(),
                     beforeSuccess: function(){
                         showLoaderIdentity();
                     },
@@ -48,19 +78,33 @@ block content
                         console.log('Шо то не так( ' + err);
                     }
             }); 
-        })
+        });
+
+        $('#deleteProject').click(function(){
+            let projectNameForSend = $("select#projectsToDelete").val();
+            if(!!projectNameForSend){
+                $.post('/admin/settings/deleteProject', {projectName: projectNameForSend})
+                    .done(function(res){
+                        $('#projectsToDelete option[value=\''+projectNameForSend+'\']').remove();
+                        console.log('success: ' + res);
+                    })
+                    .fail(function(err){
+                        console.log(err.status + ': ' + err.statusText);
+                    });
+                }
+        });
 
         // выводим идентификатор
         function showLoaderIdentity() 
         {
-            $("#loader-identity").show("slow") 
+            $("#loaderForCropping").show("slow") 
         }
-        
+
         // скрываем идентификатор
         function hideLoaderIdentity() 
         {
-            $("#loader-identity").hide();  
+            $("#loaderForCropping").hide();  
         }
-        })
-                
-                        
+        });
+
+

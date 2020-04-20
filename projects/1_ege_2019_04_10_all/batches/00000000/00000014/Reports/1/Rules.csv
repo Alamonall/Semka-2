@@ -1,7 +1,0 @@
-"RULE_ID";"RULE_NAME";"RULE_TYPE";"RULE_CERTAIN";"RULE_ENABLED";"RULE_TYPE_NAME"
-"129159";"Barcode_Symbol";"CRegularExpressionRule";"0";"0";"Регулярное выражение"
-"129162";"BarCode";"CExpressionRule";"0";"0";"Проверка с условием"
-"129165";"Дата";"CDateNormalizerRule";"0";"1";"Нормализация и проверка даты"
-"129168";"Пол";"CExpressionRule";"0";"0";"Проверка с условием"
-"129171";"Штрих-код";"CRegularExpressionRule";"0";"1";"Регулярное выражение"
-"129174";"BarCode1";"CExpressionRule";"0";"1";"Проверка с условием"

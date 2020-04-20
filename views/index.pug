@@ -1,7 +1,7 @@
 extends layout
 
 block content
-  div(class='container')
+  div(class='d-flex justify-content-center')
     div(class="card")
       article(class="card-body")
         form(id="login" method="post" action="/")
@@ -11,14 +11,14 @@ block content
                 span(class="input-group-text")
                   i(class="fa fa-user")
               input(name="username" 
-                    class="form-control" placeholder="Логин")
+                class="form-control" placeholder="Логин")
           div(class="form-group")
             div(class="input-group")
               div(class="input-group-prepend")
                 span(class="input-group-text")
                   i(class="fa fa-lock")
               input(name='password' class="form-control" 
-                    placeholder="******" type="password")
+                placeholder="******" type="password")
           div(class="form-group")
             button(type="submit" class="btn btn-primary btn-block") Войти
             button(id="guestButton" class="btn btn-primary btn-block") Войти гостем
@@ -32,4 +32,3 @@ block content
         })
       })
     })
-        

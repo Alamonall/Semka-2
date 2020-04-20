@@ -1,23 +1,24 @@
 mixin admin-list
-    ul(class='menu-main')
-        li
-            a(href='/admin/admin') Администрирование
-        li
-            a(href='/admin/settings') Настройки
-        li
-            a(href='/admin/verifycontrol') Контроль верификации
-        li
-            a(href='/admin/user_list') Список пользователей
-    form(id='logout' action='logout' method='get')
-        div
-            p User
-            p Privilieges
-        div
-            button( type="submit" class="btn btn-danger" ) Выход
+    nav(class="navbar sticked-top navbar-dark bg-primary")
+        a(class="navbar-brand mb-0 h1" href="/") Semka 2000
+        ul(class='nav justify-content-center')
+            li(class='nav-item')
+                a(class="nav-link text-white" href='/admin/admin') Администрирование
+            li(class='nav-item')
+                a(class="nav-link text-white" href='/admin/settings') Настройки
+            li(class='nav-item')
+                a(class="nav-link text-white" href='/admin/verifycontrol') Контроль верификации 
+            li(class='nav-item')
+                a(class="nav-link text-white" href='/')= user
+        form(class='form-inline my-2 my-lg-0' id='logout' action='logout' method='get')
+            button( id='exitButton' type="submit" class="btn btn-danger" ) Выход
+
 mixin user-list
     ul(class='menu-main')
         li
             a(href='/user/verifycontrol') Контроль верификации
+        li
+            a(href='/user/userinfo') Пользователь
     form(id='logout' action='logout' method='get')
         div
             p User
