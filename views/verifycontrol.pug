@@ -4,7 +4,6 @@ include menu-partial
 
 block content   
     +admin-list
-    h3 Контроль верификации
     div(class='container-fluid')
         form(method='get' action='/admin/verifycontrol/onhand')
             div(class='form-group row')
@@ -27,240 +26,215 @@ block content
     script.
         $(document).ready(function () { 
             $("#projectList").change(function () {
-                functions.getSubjects();
+                getSubjects();
             });
+            
             $('.test-popup-link').magnificPopup({ type: 'image' });
-
         });
 
-        const functions = {
-            /*получение данных для составления списка изображений для верификации*/
-            getDataForVerification: function(data){
-                $.ajax({
-                    type: 'post',
-                    url: '/admin/verifycontrol/onhand',
-                    data: data,
-                    dataType: 'json',
-                    success: function (data) {
-                        if(data.length == 0){
-                            $("#verifyControlTable").remove();
-                            $("#sendResult").remove();
-                            $('#projectList').prop('disabled', false);
-                            $('#subjectList').prop('disabled', false);
-                            functions.getImages();
-                        }
-                        else {
-                            let darktable = '<table id="verifyControlTable" class="table table-hover table-bordered">';
-                            darktable += '<tbody>';
-                            console.log(data);
-                            $.each(data, function (key, value) {
-                                darktable += '<tr height="110"><th class="info" scrope="row">' + key + '</th>';
-                                darktable += '<td class="info" scrope="row">' + value.value + '</td>';
-                                darktable += '<td class="img" status="0" id=\'' + value.id + '\'><img src=\'' + value.cropped_image + '\' alt=\'Изображение со значением: ' + value.value + '\' height="92" width="1071"/>';
-                                darktable += '</td>';
-                                darktable += '<td><ul class="list-unstyled">';
-                                darktable += '<li>' + 'Задание: ' + value.task + '</li>'
-                                darktable += '<li>' + 'ФИО:' + '</li>'
-                                darktable += '<li>' + 'Никнейм:' + '</li>'
-                                darktable += '<li><a class="popup-link-to-original-image" href=\''+value.original_image+'\'>Ссылка на бланк</a></li></ul></td>'
-                                darktable += '</tr>';
-
-                            })
-                            darktable += '</tbody></table>'
-                            darktable += '<div><button id="sendResult" class="btn btn-primary">Отправить</button></div>'
-
-                            //Удаление кнопок "отправить на контроль". Не уверен, что удаление это хороший путь, но пока так
-                            $('#formForGoToVerifyButtons').remove();
-                            $('#answersTable').html(darktable); 
-                            $('#verifyControlTable td.img').bind('click', function () {
-                                if ($(this).attr("status") == 0) {
-                                    $(this).attr("status", 1);
-                                    $(this).css('background-color', 'blue');
-                                } else if ($(this).attr("status") == 1) {
-                                    $(this).attr("status", 2);
-                                    $(this).css('background-color', 'red');
-                                } else if ($(this).attr("status") == 2) {
-                                    $(this).attr("status", 0);
-                                    $(this).css('background-color', 'inherit');
-                                }
-                            });
-                            $('#sendResult').bind('click', function (e) {
-                                e.preventDefault();
-                                functions.bindSendResultsButton();
-                            });
-                            $('.popup-link-to-original-image').bind('click', function(e){
-                                e.preventDefault();
-                                $('.popup-link-to-original-image').magnificPopup({ type: 'image' });
-                            });
-                            }
-                        },
-                        error: function (err) {
-                            alert('somethings wrong in getDataForVerification: ' + err);
-                        }
-                });
-                },
-
-            /*
-            Получение таблицы ответ(кол-во изображений) на основе выбранного предмета и проекта
-            */
-            getImages: function () {
-                $.ajax({
-                    type: 'post',
-                    url: '/admin/verifycontrol/getImages',
-                    data: {
-                        'subjectCode': $("select#subjectList").val(),
-                        'projectName': $("select#projectList").val()
-                    },
-                    success: function (data) {
-                        functions.setTable(data);
-                    },
-                    error: function (err) {
-                        console.log('Шо то не так( ' + err);
+        /*получение данных для составления списка изображений для верификации (непосредственно верификация)*/
+        function getDataForVerification(data){        
+            $.post( '/admin/verifycontrol/onhand', data)
+                .done(function (data) {
+                    if(data.length == 0){
+                        $("#verifyControlTable").remove();
+                        $("#sendResult").remove();
+                        $('#projectList').prop('disabled', false);
+                        $('#subjectList').prop('disabled', false);
+                        getImages();
                     }
-                });
-            },
-            /*
-            Получение списка предметов на основе выбранного проекта
-            */
-            getSubjects: function () {
-                $.ajax({
-                    type: 'post',
-                    url: '/admin/verifycontrol/getSubjects',
-                    data: 'projectName=' + $("select#projectList").val(),
-                    success: function (data) {
-                        //$("#sbjlst").remove();
-                        let select = '<select id="subjectList" class="form-control"><option value="Выберите предмет" selected="selected">Выберите предмет</option>';
+                    else {
+                        let verifyControlTable = '<table id="verifyControlTable" class="table table-hover table-bordered">';
+                        verifyControlTable += '<tbody>';
+                        console.log(data);
                         $.each(data, function (key, value) {
-                            select += '<option value=\'' + JSON.stringify(value.subject_code) + '\'>' + value.subject_name + '</option>';
+                            verifyControlTable += '<tr height="110"><th class="info" scope="row">' + key + '</th>';
+                            verifyControlTable += '<td class="info" scope="row">' + value.value + '</td>';
+                            verifyControlTable += '<td class="img" status="0" id=\'' + value.id + '\'><img src=\'' + value.cropped_image + '\' class="img-fluid" alt=\'Изображение со значением: ' + value.value + '\' />';
+                            verifyControlTable += '</td>';
+                            verifyControlTable += '<td><ul class="list-unstyled">';
+                            verifyControlTable += '<li>' + 'Задание: ' + value.task + '</li>'
+                            verifyControlTable += '<li>' + 'ФИО:' + '</li>'
+                            verifyControlTable += '<li>' + 'Никнейм:' + '</li>'
+                            verifyControlTable += '<li><a class="popup-link-to-original-image" href=\''+value.original_image+'\'>Ссылка на бланк</a></li></ul></td>'
+                            verifyControlTable += '</tr>';
+
                         })
-                        select += '</select>';
-                        $('#projectList option[value=\'Выберите проект\']').remove();
-                        $('#subjectSelect').html(select);
-                        $('#subjectList').bind('change', function () {
-                            //Нужно прописать удаление option в sbjlst со значнием "Выберите предмет"
-                            functions.getImages();
+                        verifyControlTable += '</tbody></table>'
+                        verifyControlTable += '<div><button id="sendResult" class="btn btn-primary">Отправить</button></div>'
+
+                        //Удаление кнопок "отправить на контроль". Не уверен, что удаление это хороший путь, но пока так
+                        $('#formForGoToVerifyButtons').remove();
+                        $('#answersTable').html(verifyControlTable); 
+
+                        $('#verifyControlTable td.img').bind('click', function () {
+                            if ($(this).attr("status") == 0) {
+                                $(this).attr("status", 1);
+                                $(this).css('background-color', 'blue');
+                            } else if ($(this).attr("status") == 1) {
+                                $(this).attr("status", 2);
+                                $(this).css('background-color', 'red');
+                            } else if ($(this).attr("status") == 2) {
+                                $(this).attr("status", 0);
+                                $(this).css('background-color', 'inherit');
+                            }
                         });
-                        //Удаление таблички с вариантами для верификации. Зачем? Её здесь быть не должно на данном этапе
-                        $('#preVerifyControlTable').remove();
-                    },
-                    error: function () {
-                        alert('Шо то не так( ' + document.getElementById('projectList').value)
-                    }
-                });
-            },
-            /*
-            формирование таблицы с ответами для контроля верификации
-            */
-            setTable: function (data) {
-                console.log('data.length=' + data.length);
-                let numOfRows = 0,
-                    numOfCols = 10;
-                if (data.length % 10 > 0) {
-                    numOfRows = Math.floor(data.length / 10) + 1;
-                    console.log('rows: ' + numOfRows);
-                } else {
-                    console.log('acid rocket')
-                    numOfRows = Math.floor(data.length / 10);
-                }
 
-                $('#tBody').remove(); //??
-                let tableBody = '<table id="preVerifyControlTable" class="table table-responsive table-bordered table-striped table-light"><tbody id="tBody">';
-                for (let i = 0; i < numOfRows; i++) {
-                    tableBody += '<tr>';
-                    //console.log("rows it: " + i + 'and ' + Math.floor(data.length/10));
-                    //проверка на не полные столбы
-                    if (i == Math.floor(data.length / 10)) {
-                        numOfCols = data.length % 10;
-                        //console.log("numcOfCols: " +numOfCols);
-                    }
-                    for (let j = 0; j < numOfCols; j++) {
-                        tableBody += '<td value =\'' + data[+('' + i + j)].value + '\' align="center">';
-                        tableBody += '<input id=\'' + ('' + i + j) + '\'type=\'checkbox\' value=\'' + data[+('' + i + j)].value + '\' count=\'' + data[+('' + i + j)].count + '\'>';
-                        tableBody += data[+('' + i + j)].value + '(' + JSON.stringify(data[+('' + i + j)].count) + ')';
-                        tableBody += '</input>';
-                        tableBody += '</td>';
-                    }
-                    tableBody += '</tr>';
-                }
-                tableBody += '</tbody></table>'
-                $('#subjectList option[value=\'Выберите предмет\'').remove();
-                $('#answersTable').html(tableBody);
-                
-                //Не работает тема, вернуться и доделать
-                $('#preVerifyControlTable input').bind('click', function () {
-                    $(this).css('background-color', 'green');
-                });
-                let buttons = '<form id=\'formForGoToVerifyButtons\' action=\'/admin/verifycontrol/onhand\')>'
-                buttons +=  '<button id=\'goToVerifyButton\' type=\'submit\'  class=\'btn btn-primary\'> Проверить выбранные </button>';
-                buttons += '<button id=\'goToVerifyButtonFirstFifty\' type=\'submit\'  class=\'btn btn-primary\'> Проверить первые 500 </button>';
-                buttons += '</form>'
-                $('#divForGoToVerifyButtons').html(buttons);
-                $('#goToVerifyButtonFirstFifty').bind('click', function (e) {
-                    e.preventDefault();
-                    functions.bindGoToVerifyButton($('input[type=\'checkbox\']'));
-                });
-                $('#goToVerifyButton').bind('click', function (e) {
-                    e.preventDefault();
-                    functions.bindGoToVerifyButton($("input[type=\'checkbox\']:checked"));
-                });
-            },
+                        $('#sendResult').bind('click', function (e) {
+                            e.preventDefault();
+                            bindSendResultsButton();
+                        });
 
-            bindGoToVerifyButton: function (values) {               
-                if (values.length) {
-                    $('#projectList').prop('disabled', true);
-                    $('#subjectList').prop('disabled', true);
-                    let data = {};
-                    data.values = {};
-                    data.projectName = $('#projectList').val();
-                    data.subjectCode = $('#subjectList').val();
-                    for (i = 0; i < values.length; i++) {
-                        data.values[i] = $('#' + values[i].id).val();
-                    }
-                    //localStorage.setItem('data', data);
-                    functions.getDataForVerification(data);
-                } else {
-                    alert('Не выбраны данные для проверки');
-                }
-            },
-
-            bindSendResultsButton: function () {
-                let resultOfVerifyControl = $("td[class=\'img\']");
-                if (resultOfVerifyControl.length) {
-                    let answers = {};
-                    answers.imageIds = {};
-                    answers.statuses = {};
-                    for (let i = 0; i < resultOfVerifyControl.length; i++) { 
-                        answers.imageIds[i] = $('#'+resultOfVerifyControl[i].id).attr('id');
-                        answers.statuses[i] = $('#'+resultOfVerifyControl[i].id).attr('status');
-                    }
-                    $.ajax({
-                        type: 'post',
-                        url: '/admin/verifycontrol/sendResult',
-                        data: answers,
-                        dataType: 'json',
-                        success: function (data) {
-                            console.log('send result success ' + data.response); //location.href=location.href;
-                            /*
-                            Нужно загрузить страницу с выбранным проектом и предметом
-                            */
-                            $("#verifyControlTable").remove();
-                            $("#sendResult").remove();
-                            $('#projectList').prop('disabled', false);
-                            $('#subjectList').prop('disabled', false);
-                            functions.getImages();
-                        },
-                        error: function (xhr, status, error) {
-                            console.log('error in sendresult post. Status: ' + status + ' Message:' + error);
+                        /*ссылка на оригинальное изображение*/
+                        $('.popup-link-to-original-image').bind('click', function(e){
+                            e.preventDefault();
+                            $('.popup-link-to-original-image').magnificPopup({ type: 'image' });
+                        });
                         }
+                    })
+                    .fail(function (err) {
+                        console.log(err);
                     });
-                } else{
-                    $("#verifyControlTable").remove();
-                    $("#sendResult").remove();
-                    $('#projectList').prop('disabled', false);
-                    $('#subjectList').prop('disabled', false);
-                    functions.getImages();
+            } 
+
+        /*
+        Получение таблицы ответ(кол-во изображений) на основе выбранного предмета и проекта
+        */ 
+        function getImages() {            
+            $.post('/admin/verifycontrol/getImages', { subjectCode: $("select#subjectList").val(), projectName: $("select#projectList").val() })
+                .done(function (data) {
+                    setTable(data);
+                })
+                .fail(function (err) {
+                    console.log('Шо то не так( ' + err);
+                });
+        };
+
+        /*
+        Получение списка предметов на основе выбранного проекта
+        */
+        function getSubjects() {
+            $.post('/admin/verifycontrol/getSubjects', {projectName: $("select#projectList").val()})
+                .done(function (data) {
+                    console.log('done by get subjects ' + data.length);
+                    let select = '<select id="subjectList" class="form-control"><option value="Выберите предмет" selected="selected">Выберите предмет</option>';
+                    $.each(data, function (key, value) {
+                        select += '<option value=\'' + JSON.stringify(value.subject_code) + '\'>' + value.subject_name + '</option>';
+                    })
+                    select += '</select>';
+                    $('#projectList option[value=\'Выберите проект\']').remove();
+                    $('#subjectSelect').html(select);
+                    $('#subjectList').bind('change', function () {
+                        //Нужно прописать удаление option в sbjlst со значением "Выберите предмет"
+                        getImages();
+                    });
+                    //Удаление таблички с вариантами для верификации. Зачем? Её здесь быть не должно на данном этапе
+                    $('#preVerifyControlTable').remove();
+                })
+                .fail(function () {
+                    console.log('Шо то не так( ' + document.getElementById('projectList').value);
+                });
+        };
+
+        /*
+        формирование таблицы с ответами для контроля верификации
+        */
+        function setTable(data) {
+            if(data.length == 0){
+
+            }
+            console.log('data.length=' + data.length);
+            let numOfRows = 0,
+                numOfCols = 10;
+            if (data.length % 10 > 0) {
+                numOfRows = Math.floor(data.length / 10) + 1;
+                console.log('rows: ' + numOfRows);
+            } else {
+                console.log('acid rocket')
+                numOfRows = Math.floor(data.length / 10);
+            }
+
+            $('#tBody').remove(); //??
+            let tableBody = '<table id="preVerifyControlTable" class="table table-responsive table-bordered table-striped table-light"><tbody id="tBody">';
+            for (let i = 0; i < numOfRows; i++) {
+                tableBody += '<tr>';
+                //console.log("rows it: " + i + 'and ' + Math.floor(data.length/10));
+                //проверка на не полные столбы
+                if (i == Math.floor(data.length / 10)) {
+                    numOfCols = data.length % 10;
+                    //console.log("numcOfCols: " +numOfCols);
                 }
-            },
+                for (let j = 0; j < numOfCols; j++) {
+                    tableBody += '<td value =\'' + data[+('' + i + j)].value + '\' align="center">';
+                    tableBody += '<input id=\'' + ('' + i + j) + '\'type=\'checkbox\' value=\'' + data[+('' + i + j)].value + '\' count=\'' + data[+('' + i + j)].count + '\'>';
+                    tableBody += data[+('' + i + j)].value + '(' + JSON.stringify(data[+('' + i + j)].count) + ')';
+                    tableBody += '</input>';
+                    tableBody += '</td>';
+                }
+                tableBody += '</tr>';
+            }
+            tableBody += '</tbody></table>'
+            $('#subjectList option[value=\'Выберите предмет\'').remove();
+            $('#answersTable').html(tableBody);
+            
+            //Не работает тема, вернуться и доделать
+            $('#preVerifyControlTable input').bind('click', function () {
+                $(this).css('background-color', 'green');
+            });
+            let buttons = '<form id=\'formForGoToVerifyButtons\' action=\'/admin/verifycontrol/onhand\')>'
+            buttons +=  '<button id=\'goToVerifyButton\' type=\'submit\'  class=\'btn btn-primary\'> Проверить выбранные </button>';
+            buttons += '<button id=\'goToVerifyButtonFirstFifty\' type=\'submit\'  class=\'btn btn-primary\'> Проверить первые 500 </button>';
+            buttons += '</form>'
+            $('#divForGoToVerifyButtons').html(buttons);
+            $('#goToVerifyButtonFirstFifty').bind('click', function (e) {
+                e.preventDefault();
+                bindGoToVerifyButton($('input[type=\'checkbox\']'));
+            });
+            $('#goToVerifyButton').bind('click', function (e) {
+                e.preventDefault();
+                bindGoToVerifyButton($("input[type=\'checkbox\']:checked"));
+            });
+        };
 
+        function bindGoToVerifyButton(values) {               
+            if (values.length) {
+                $('#projectList').prop('disabled', true);
+                $('#subjectList').prop('disabled', true);
+                let data = {};
+                data.values = {};
+                data.projectName = $('#projectList').val();
+                data.subjectCode = $('#subjectList').val();
+                for (i = 0; i < values.length; i++) {
+                    data.values[i] = $('#' + values[i].id).val();
+                }
+                //localStorage.setItem('data', data);
+                getDataForVerification(data);
+            } else {
+                alert('Не выбраны данные для проверки');
+            }
+        };
 
-        }
+        function bindSendResultsButton() {
+            let resultOfVerifyControl = $("td[class=\'img\']");     
+            if(resultOfVerifyControl.length == 0)
+                console.log('Почему-то изображений 0');
+            let data = {};
+            data.imageIds = {};
+            data.statuses = {};
+            for (let i = 0; i < resultOfVerifyControl.length; i++) { 
+                data.imageIds[i] = $('#'+resultOfVerifyControl[i].id).attr('id');
+                data.statuses[i] = $('#'+resultOfVerifyControl[i].id).attr('status');
+            }
+            $.post('/admin/verifycontrol/sendResult', data)
+                .done(function (data) {
+                    console.log('send result success ' + data.response); //location.href=location.href;
+                })
+                .fail(function (xhr, status, error) {
+                    console.log('Status: ' + status + ' Message:' + error);
+                });
+            $("#verifyControlTable").remove();
+            $("#sendResult").remove();
+            $('#projectList').prop('disabled', false);
+            $('#subjectList').prop('disabled', false);
+            getImages();
+        };

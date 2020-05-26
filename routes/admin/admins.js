@@ -1,7 +1,10 @@
-var express = require('express');
-var router = express.Router();
-let inst = require('../../config/inst.js');
-let mysql = require("mysql2");
+const express = require('express');
+const router = express.Router();
+const cutter = require('../../config/cutter.js')
+const inst = require('../../config/inst.js');
+const excelExporter = require('../../config/excelExporter.js');
+
+const mysql = require("mysql2");
 
 let _imagePool = 500;
 
@@ -32,14 +35,24 @@ router.get('/admin', mustAuthenticated, (req, res) => {
   pool.execute(query)
     .then(users =>
       res.render('admin', {
-        users: users[0],
-        user: !!req.user ? req.user : req.session.passport.user
+        users: users[0]
       })
     )
     .catch(err => {
       console.log('err: ' + err);
-      res.redirect('/')
+      res.status(500).send(err);
+    });
+});
+
+router.post('/admin/clearNotFinishedData', mustAuthenticated, (req,res)=>{
+  console.log('post(/admin/clearNotFinishedData(' + req.body.userName + ')');
+  pool.execute('UPDATE ver_db.answers as a SET a.onhand = 0 where a.onhand = 1 and a.username = ?' , [req.body.userName])
+    .then(() => {
+      res.status(200).send('Счётчик для ' + req.body.userName + 'обнулён');
     })
+    .catch(err => {
+      console.log(err.message);
+    });
 });
 
 router.get('/settings', mustAuthenticated, (req, res) => {
@@ -50,40 +63,43 @@ router.get('/settings', mustAuthenticated, (req, res) => {
     .then(rows => {
       res.render('settings', {
         projectsToCut: inst.GetListProjectsForCutting(),
-        projectsToDelete: rows[0],
-        imagePool: _imagePool,
-        projectsForResult: rows[0],
+        completeProjects: rows[0],
+        imagePool: _imagePool, 
         user: !!req.user ? req.user : req.session.passport.user
       });
     })
     .catch(err => {
-      res.status(500).redirect('/');
+      res.status(500).send(err.message);
     });
 });
 
-router.post('/settings/deleteProject', (req, res) => {
-  pool.execute('delete from complete_projects where project_name =\'' + req.body.projectName + '\'')
-    .catch((err) => {
+router.post('/settings/deleteProject', mustAuthenticated, (req, res) => {
+  console.log('port /settings/deleteProject');
+  pool.execute('delete from complete_projects, answers using complete_projects, answers where complete_projects.project_name = answers.project_name and project_name =\'' + req.body.projectName + '\'')
+    .then(()=>{
+      res.status(200).send('Проект удалён');
+    }).catch((err) => {
       res.status(500).send('Что-то пошло не так и проект скорей всего не удалён' + err);
-    });
-  pool.execute('delete from answers where project_name =\'' + req.body.projectName + '\'')
-    .catch((err) => {
-      res.status(500).send('Что-то пошло не так и проект скорей всего не удалён' + err);
-    });
-  res.status(200).send('Проект удалён');
+    }); 
+ 
 });
 
-router.post('/settings/cutProject', (req, res) => {
+router.post('/settings/cutProject', mustAuthenticated, async (req, res) => {
   //при запуске запустить прогрессбар для резки проекта
   //указываем абсолютный путь к проекту и папкам с изображениями      
   try {
     console.log('post /settings/cutProject req.body.projectToCut: ' + req.body.projectToCut);
     //резка изображений
-    //переадрессация должна работать на основе сессиии и вообще лучше через ajax подвтерждение резки сделать
-    req.body.projectToCut ?
-      inst.ImageCutting(req.body.projectToCut) ? 
-        res.redirect('/admin/settings') : res.status('500').send("Ошибка в резке изображений") :
-          res.status(500).send("Проблема с projectToCut, которая " + req.body.projectToCut);
+    //переадрессация должна работать на основе сессии и вообще лучше через ajax подвтерждение резки сделать
+    let completeProject;
+    if(req.body.projectToCut){
+      completeProject = await cutter.cutTheImages(req.body.projectToCut);
+      res.status(200).send(completeProject);
+      }
+    else {
+      res.status(500).send("Проблема с projectToCut, которая " + req.body.projectToCut);
+      }
+    
     /*Получаем JSOn проекта со списком предметов внутри и порезанными изображениями
       Далее смотрим, есть ли файл со списком обработанных проектов, проверяем на существование только что обработанного и,
        либо записываем его, если не нашли, либо пропускаем эту часть*/
@@ -92,10 +108,16 @@ router.post('/settings/cutProject', (req, res) => {
   }
 });
 
-router.post('/settings/saveImagePool', (req, res) => {
+router.post('/settings/saveImagePool', mustAuthenticated, (req, res) => {
   console.log('post /settings/saveImagePool req.body.imagePool: ' + req.body.imagePool);
   _imagePool = req.body.imagePool;
   res.status(200).send('Image pool is saved');
+})
+
+router.post('/settings/exportToTheExcel',mustAuthenticated, async (req,res)=>{
+  console.log('post of export to the excel');
+  let work = await excelExporter.export(req.body.projectName);
+  res.status(200).send(work);    
 })
 
 router.get('/verifycontrol', mustAuthenticated, (req, res) => {
@@ -118,13 +140,13 @@ router.get('/verifycontrol', mustAuthenticated, (req, res) => {
 /*
 Получение списка предметов для контроля верификации
 */
-router.post('/verifycontrol/getSubjects', (req, res) => {
+router.post('/verifycontrol/getSubjects', mustAuthenticated, (req, res) => {
   try {
     let timeInMs = Date.now();
-    console.log('post /get subjects by admin: ' + req.body.projectName);
+    console.log('post /get subjects by admin: ' + JSON.stringify(req.body.projectName));
     pool.execute("select distinct cp.subject_code as subject_code, s.subject_name as subject_name from complete_projects as cp inner join subjects as s on s.subject_code = cp.subject_code where project_name = \"" + req.body.projectName + "\"")
       .then(result => {
-        console.log('time for post /verifycontrol/getSubjects: ' + JSON.stringify(Date.now() - timeInMs));
+        console.log('time for post /verifycontrol/getSubjects: ' + JSON.stringify(Date.now() - timeInMs) + 'милисекунд');
         res.status(200).send(result[0]);
       })
       .catch(err => {
@@ -138,7 +160,7 @@ router.post('/verifycontrol/getSubjects', (req, res) => {
 /*
 Получение списка изображений на основе выбранного имени проекта и кода предмета
 */
-router.post('/verifycontrol/getImages', (req, res) => {
+router.post('/verifycontrol/getImages', mustAuthenticated, (req, res) => {
   let timeInMs = Date.now();
   console.log('post /get images by admin: ' + req.body.subjectCode + ', ' + req.body.projectName);
   pool.execute('select answers.value as value, count(answers.value) as count from answers where onhand = 0 and project_name = \'' + req.body.projectName + '\' and subject_code = ' + req.body.subjectCode + ' group by(answers.value) order by answers.value')
@@ -155,13 +177,14 @@ router.post('/verifycontrol/getImages', (req, res) => {
 /*
 Получение ответов для контроля верификации
 */
-router.post('/verifycontrol/onhand', (req, res) => {
+router.post('/verifycontrol/onhand', mustAuthenticated, (req, res) => {
   /*
    counterOfValue - Значение (количество значений)
   */
   let counterOfValue = JSON.stringify(req.body.values).substring(1, JSON.stringify(req.body.values).length - 1);
   console.log('post onhand: ' + counterOfValue + 'pr: ' + req.body.projectName + ' sb: ' + req.body.subjectCode + '; user: ' + req.session.passport.username);
   let timeInMs = Date.now();
+
   //получение списка файлов для верификации
   pool.execute('select distinct * from answers where value in ( ' + counterOfValue + ') and project_name = \'' + req.body.projectName + '\' and subject_code = ' + req.body.subjectCode + ' and onhand = 0 order by value limit ' + _imagePool)
     .then(rows => {
@@ -184,7 +207,7 @@ router.post('/verifycontrol/onhand', (req, res) => {
 
 });
 
-router.post('/verifycontrol/sendResult', (req, res) => {
+router.post('/verifycontrol/sendResult', mustAuthenticated, (req, res) => {
   console.log('post(/verifycontrol/sendResult: req.body.imageIds.length = ' + req.body.imageIds.length);
   for (let i = 0; i < req.body.imageIds.length; i++) {
     console.log('req.body.img_ids: ' + req.body.imageIds[i] + '; req.body.status: ' + req.body.statuses[i]);
@@ -201,7 +224,7 @@ router.post('/verifycontrol/sendResult', (req, res) => {
   }
   console.log('succesfully update data');
   res.status(200).send({
-    response: 'update was successfull'
+    response: 'update was successful'
   })
 
 });

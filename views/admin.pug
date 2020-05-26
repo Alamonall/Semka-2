@@ -23,14 +23,14 @@ block content
 						td= user.userName
 						td= user.fio
 						td= user.privileges
-						td= user.notFinishedAnswersCount
+						td(id='notFinishedAnswersCount')= user.notFinishedAnswersCount
 						td= user.finishedAnswersCount
 						td= user.bigMistakeCount 
 						td= user.smallMistakeCount 
 						td
-							button(onclick='clearNotFinishedAnswersData(' +user.userId+ ')' class="btn btn-light") Очистить
+							button(onclick='clearNotFinishedAnswersData(\'' + user.userName + '\')' class="btn btn-light") Очистить
 						td
-							button(onclick='deleteUser(' + user.userId + ')' class="btn btn-light") Удалить пользователя  
+							button(onclick='deleteUser(\'' + user.userId + '\')' class="btn btn-light") Удалить пользователя  
 	script.
 		$(document).ready(function () { 
 
@@ -41,7 +41,17 @@ block content
 
 		};
 
-		function clearNotFinishedAnswersData(userId){
+		function clearNotFinishedAnswersData(userName){
+			console.log('clearNotFinishedAnswersData(' + userName + ')');
+			$.post('/admin/admin/clearNotFinishedData', {userName: userName})
+				.done(function(res){
+					console.log(res);
+					$('#notFinishedAnswersCount').val(0);
+					$('#notFinishedAnswersCount').text(0);
+				})
+				.fail(function(err){
+					console.log('Что-то произошло не так при очистки не законченных данных');
+				})
 
 		};
 

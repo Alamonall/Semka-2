@@ -4,7 +4,7 @@ include menu-partial
 
 block content        
     +admin-list
-    h3= title    
+    h3= title            
         div(class='container-fluid')    
             table.table.table-bordered
                 tbody
@@ -32,7 +32,7 @@ block content
                         th(scope='row') Удаление проектов:
                         td 
                             select(class='custom-select my-1 mr-sm-2' id='projectsToDelete') 
-                                each pr in projectsToDelete
+                                each pr in completeProjects
                                     option(value=pr.project_name)= pr.project_name
                                 else
                                     option(value='Проектов нет' selected='selected') Проектов нет  
@@ -41,70 +41,72 @@ block content
                     tr
                         th(scope='row') Выгрузка проектов:
                         td 
-                            select(class='custom-select my-1 mr-sm-2' id='resultOfVerification') 
-                                each pr in projectsForResult
+                            select(class='custom-select my-1 mr-sm-2' id='projectToExport') 
+                                each pr in completeProjects
                                     option(value=pr.project_name)= pr.project_name
                                 else
                                     option(value='Проектов нет' selected='selected') Проектов нет  
                         td 
-                            button(id="getTheResult" class="btn btn-primary") Результаты    
+                            button(id="exportToTheExcel" class="btn btn-primary") Выгрузить  
     script.
         $(document).ready(function () {
             $('#saveImagePoolValue').click(function(e){
-                e.preventDefault();                
-                $.ajax({
-                    type: 'post',
-                    url:  '/admin/settings/saveImagePool',
-                    data: 'imagePool='+ $("input#imagePool").val(),
-                    error: function (err) {
-                        console.log('Шо то не так( ' + err);
-                    }
-                });
-            });
-
-            $('#cutProject').click(function(e){
-                e.preventDefault();                
-                $.ajax({
-                    type: 'post',
-                    url:  '/admin/settings/cutProject',
-                    data: 'projectToCut='+ $("select#projectsToCut").val(),
-                    beforeSuccess: function(){
-                        showLoaderIdentity();
-                    },
-                    success: function (data) {
-                        hideLoaderIdentity();
-                    },
-                    error: function (err) {
-                        console.log('Шо то не так( ' + err);
-                    }
-            }); 
-        });
-
-        $('#deleteProject').click(function(){
-            let projectNameForSend = $("select#projectsToDelete").val();
-            if(!!projectNameForSend){
-                $.post('/admin/settings/deleteProject', {projectName: projectNameForSend})
-                    .done(function(res){
-                        $('#projectsToDelete option[value=\''+projectNameForSend+'\']').remove();
-                        console.log('success: ' + res);
-                    })
+                e.preventDefault();         
+                $.post('/admin/settings/saveImagePool', {imagePool: $("input#imagePool").val()})       
                     .fail(function(err){
                         console.log(err.status + ': ' + err.statusText);
-                    });
+                    });  
+            });
+
+            $('#cutProject').click( function(e){
+                e.preventDefault();                       
+                if(!!$("select#projectsToCut").val()){        
+                    $.blockUI({ message: '<span id="timerForCutting"> Проект режется уже '+ Date.now() +'...</span>' }); 
+                    $.post('/admin/settings/cutProject', { projectToCut: $("select#projectsToCut").val() })
+                        .done(function(res){
+                            $.unblockUI();
+                            $('#projectsToDelete').append($('<option>', {
+                                value: res,
+                                text: res
+                            }));
+                            $('#resultOfVerification').append($('<option>', {
+                                value: res,
+                                text: res
+                            })); 
+                        })
+                        .fail(function(err){
+                            console.log(err.status + ': ' + err.statusText);
+                        }); 
                 }
+            });
+
+            $('#deleteProject').click(function(){
+                let projectNameForSend = $("select#projectsToDelete").val();
+                if(!!projectNameForSend){
+                    $.post('/admin/settings/deleteProject', {projectName: projectNameForSend})
+                        .done(function(res){
+                            $('#projectsToDelete option[value=\''+projectNameForSend+'\']').remove();
+                            $('#resultOfVerification option[value=\''+projectNameForSend+'\']').remove();
+                        })
+                        .fail(function(err){
+                            console.log(err.status + ': ' + err.statusText);
+                        });
+                    }
+            });
+            $('#exportToTheExcel').click(function(){
+                if(!!$("select#projectToExport").val()){
+                    $.blockUI({ message: '<span> Выгружаю проект</span>' });
+                    $.post('/admin/settings/exportToTheExcel', {projectName: $("select#projectToExport").val()}) 
+                        .done(function(data){
+                            $.unblockUI();
+                             console.log(data);
+                        })
+                        .fail(function(err){
+                            $.unblockUI();
+                            console.log(err);
+                        });
+                    }
+            });
+            
         });
-
-        // выводим идентификатор
-        function showLoaderIdentity() 
-        {
-            $("#loaderForCropping").show("slow") 
-        }
-
-        // скрываем идентификатор
-        function hideLoaderIdentity() 
-        {
-            $("#loaderForCropping").hide();  
-        }
-        });
-
 
