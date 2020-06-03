@@ -17,8 +17,7 @@ module.exports.cutTheImages = async function (projectName) {
     let dir = path.join(__dirname, '../public/projects/', projectName, '/batches/00000000');
     let pathsToTheAud = fs.readdirSync(dir);
     let listOfBlanks = []; //список бланков
-
-    const timeInMs = Date.now();
+    let timeInMs = Date.now();
 
     const pool = mysql.createPool({
       host: 'localhost',
@@ -48,7 +47,6 @@ module.exports.cutTheImages = async function (projectName) {
     }
 
     let allPromises = [];
-    let completeProjects = [];
     try {
       for (let item of listOfBlanks) {
         let xmlString = readFileSync_encoding(path.join(dir, item) + '.XML', 'UTF-16'); //.replace(/\?\?/,'');
@@ -78,7 +76,7 @@ module.exports.cutTheImages = async function (projectName) {
                 'height': /*92*/ parseInt(page.block[i].ATTR.b, 10) - parseInt(page.block[i].ATTR.t, 10)
               }).toFile(croppedImage)
               .catch(() => {
-                console.log('second chance');
+                //console.log('second chance');
                 sharp(originalImage)
                   .extract({
                     'left': parseInt(page.block[i].ATTR.l, 10),
@@ -114,14 +112,11 @@ module.exports.cutTheImages = async function (projectName) {
 
           }
         }
-
-        /*Вставка информации о проекте, изображения которого были успешно порезаны*/
-        pool.execute('insert into complete_projects(project_name, subject_code) values (?,?)', [projectName, parsedXml.batch.page[0].block[3]._])
-
       }
 
       return await Promise.all(allPromises).then(() => {
-        console.log('done from console: ' + (Date.now - timeInMs));
+        let promiseTime = Date.now() - timeInMs;
+        console.log('done from console: ' + (promiseTime / 1000 / 60) + 'minutes');
         return projectName;
       });
     } catch (err) {

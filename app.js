@@ -3,10 +3,10 @@ const path = require('path');
 const passport = require('passport');
 require('./config/passport')(passport);
 const logger = require('morgan'); //логи get и post запросов выдаёт в консоль 
-var createError = require('http-errors'); //??
+const  createError = require('http-errors'); //??
 const flash = require('connect-flash'); // для подписей при неудачной авторизации
 const bodyParser = require('body-parser');
-var session = require('express-session');
+const session = require('express-session');
 
 const app = express();
 
@@ -30,7 +30,8 @@ app.use(session({
   secret: 'woot',
   resave: true,
   rolling: true,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {maxAge: 300000} //3600000 for 1 hour
 }));
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -42,9 +43,24 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
+
+app.all('/admin/*', (req, res, next) => {
+  console.log('req.isAuthenticated(): ' + req.isAuthenticated());
+  if (req.isAuthenticated())    
+    return next();  
+  res.redirect('/');
+});
+
 app.get('/', (req, res) => {
-  res.render('index', {
-    expressFlash: req.flash('info', 'my good, good girlfriend!')
+  res.render('index');
+});
+
+app.post('/login', passport.authenticate('local-login', {  
+  failureRedirect: '/',
+  failureFlash: true
+}), (req,res)=>{
+  res.render('home', {
+    user: !!req.user ? req.user : 'none' //req.session.passport.user
   });
 });
 
@@ -52,17 +68,6 @@ app.get('*/logout', (req, res) => {
   req.logout();
   res.redirect('/');
 })
-
-app.post('/', passport.authenticate('local-login', {
-  failureRedirect: '/',
-  failureFlash: true
-}), (req, res) => {
-  res.render('welcome', {
-    user: req.session.passport.user
-  });
-});
-
-
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

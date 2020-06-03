@@ -13,6 +13,7 @@
     "cookie-parser": "~1.4.4",
     "crypto": "^1.0.1",
     "debug": "~2.6.9",
+    "easytimer.js": "^4.1.1",
     "exceljs": "^3.9.0",
     "express": "~4.16.1",
     "express-session": "^1.16.2",

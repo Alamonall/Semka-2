@@ -8,10 +8,9 @@ mixin admin-list
                 li(class='nav-item')
                     a(class="nav-link text-white" href='/admin/settings') Настройки
                 li(class='nav-item')
-                    a(class="nav-link text-white" href='/admin/verifycontrol') Контроль верификации 
-                li(class='nav-item')
-                    a(class="nav-link text-white" href='/')= user
+                    a(class="nav-link text-white" href='/admin/verifycontrol') Контроль верификации                    
             form(class='form-inline my-2 my-lg-0' id='logout' action='logout' method='get')
-                button( id='exitButton' type="submit" class="btn btn-danger" ) Выход
+                a(class="nav-link text-white" href='/')= user.username
+                button( id='exitButton' type="submit" class="btn btn-danger" ) Выход            
 mixin user-list
     

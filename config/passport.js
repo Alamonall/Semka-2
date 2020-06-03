@@ -19,13 +19,16 @@ module.exports = function(passport) {
 
     // used to serialize the user for the session
     passport.serializeUser(function(user, done) {
-        done(null, user.username);
+        //console.log('serializeUser.id = ' + user.id);
+        done(null, user.id);
     });
 
     // used to deserialize the user
-    passport.deserializeUser(function(username, done) {
-        pool.execute("SELECT * FROM users WHERE username = ? ",[username], function(err, rows){
-            done(err, rows[0]);
+    passport.deserializeUser(function(id, done) {        
+        pool.execute("SELECT * FROM users WHERE id = ? ",[id], function(err, rows){
+            if(err) done(err, null);
+            //console.log('deserializeUser.id = ' + id + 'rows = ' + rows[0].username);
+            done(null, rows[0]);
         });
     });
 
@@ -87,20 +90,21 @@ module.exports = function(passport) {
         },
         function(req, username, password, done) { // callback with username and password from our form
            
-            pool.execute("SELECT * FROM users WHERE username = ?",[username], function(err, rows){
-                if (err)
-                    return done(err);
-                if (!rows.length) {
-                    return done(null, false, req.flash('loginMessage', 'No user found.')); // req.flash is the way to set flashdata using connect-flash
-                }
+            pool.execute("SELECT * FROM users WHERE username = ?", [username], 
+                function(err, rows){
+                    if (err)
+                        return done(err);
+                    if (!rows.length) {
+                        return done(null, false, req.flash('loginMessage', 'No user found.')); // req.flash is the way to set flashdata using connect-flash
+                    }
 
-                // if the user is found but the password is wrong
-                //console.log('pass: ' + password + '; pass2: '+ rows[0].password);
-                if (!(password == rows[0].password))
-                    return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.')); // create the loginMessage and save it to session as flashdata
+                    // if the user is found but the password is wrong
+                    //console.log('pass: ' + password + '; pass2: '+ rows[0].password);
+                    if (!(password == rows[0].password))
+                        return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.')); // create the loginMessage and save it to session as flashdata
 
-                // all is well, return successful user
-                return done(null, rows[0]);
+                    // all is well, return successful user
+                    return done(null, rows[0]);
             });
         })
     );

@@ -4,67 +4,76 @@ include menu-partial
 
 block content        
     +admin-list
-    h3= title            
-        div(class='container-fluid')    
-            table.table.table-bordered
-                tbody
-                    tr
-                        th(scope='row') Проекты для резки:
-                        td 
-                            select(class='custom-select my-1 mr-sm-2' id='projectsToCut' )
-                                each pr in projectsToCut
-                                    option(value=pr)= pr
-                                else
-                                    option(value='null') null  
-                        td 
-                            button(id="cutProject" class="btn btn-primary") Резать   
-                    tr
-                        th(scope='row') Пул изображений:
-                        td 
-                            input(id='imagePool' type='number' class='form-control'
-                                aria-label="default" 
-                                aria-describedby="inputGroup-sizing-sm"
-                                value= imagePool
-                                min='1')
-                        td 
-                            button(id='saveImagePoolValue' class="btn btn-primary") Сохранить
-                    tr
-                        th(scope='row') Удаление проектов:
-                        td 
-                            select(class='custom-select my-1 mr-sm-2' id='projectsToDelete') 
-                                each pr in completeProjects
-                                    option(value=pr.project_name)= pr.project_name
-                                else
-                                    option(value='Проектов нет' selected='selected') Проектов нет  
-                        td 
-                            button(id="deleteProject" class="btn btn-primary") Удалить   
-                    tr
-                        th(scope='row') Выгрузка проектов:
-                        td 
-                            select(class='custom-select my-1 mr-sm-2' id='projectToExport') 
-                                each pr in completeProjects
-                                    option(value=pr.project_name)= pr.project_name
-                                else
-                                    option(value='Проектов нет' selected='selected') Проектов нет  
-                        td 
-                            button(id="exportToTheExcel" class="btn btn-primary") Выгрузить  
+    div(class='container-fluid')    
+        table.table.table-bordered
+            tbody
+                tr
+                    th(scope='row') Проекты для резки:
+                    td 
+                        select(class='custom-select my-1 mr-sm-2' id='projectsToCut' )
+                            each pr in projectsToCut
+                                option(value=pr)= pr
+                            else
+                                option(value='null') null  
+                    td 
+                        button(id="cutProject" class="btn btn-primary") Резать   
+                tr
+                    th(scope='row') Пул изображений:
+                    td 
+                        input(id='imagePool' type='number' class='form-control'
+                            aria-label="default" 
+                            aria-describedby="inputGroup-sizing-sm"
+                            value= imagePool
+                            min='1')
+                    td 
+                        button(id='saveImagePoolValue' class="btn btn-primary") Сохранить
+                tr
+                    th(scope='row') Удаление проектов:
+                    td 
+                        select(class='custom-select my-1 mr-sm-2' id='projectsToDelete') 
+                            each pr in completeProjects
+                                option(value=pr.project_name)= pr.project_name
+                            else
+                                option(value='Проектов нет' selected='selected') Проектов нет  
+                    td 
+                        button(id="deleteProject" class="btn btn-primary") Удалить   
+                tr
+                    th(scope='row') Выгрузка проектов:
+                    td 
+                        select(class='custom-select my-1 mr-sm-2' id='projectToExport') 
+                            each pr in completeProjects
+                                option(value=pr.project_name)= pr.project_name
+                            else
+                                option(value='Проектов нет' selected='selected') Проектов нет  
+                    td 
+                        button(id="exportToTheExcel" class="btn btn-primary") Выгрузить  
     script.
         $(document).ready(function () {
             $('#saveImagePoolValue').click(function(e){
                 e.preventDefault();         
-                $.post('/admin/settings/saveImagePool', {imagePool: $("input#imagePool").val()})       
+                console.log('saveImagePoolValue');
+                $.put('/admin/settings/saveImagePool', {imagePool: $("input#imagePool").val()} )       
                     .fail(function(err){
                         console.log(err.status + ': ' + err.statusText);
                     });  
-            });
+            });             
 
             $('#cutProject').click( function(e){
                 e.preventDefault();                       
-                if(!!$("select#projectsToCut").val()){        
-                    $.blockUI({ message: '<span id="timerForCutting"> Проект режется уже '+ Date.now() +'...</span>' }); 
+                if(!!$("select#projectsToCut").val()){  
+                    let start = timer();   
+                    start.next();   
+                    let counter = '<div id="timer">';
+                    counter+= '<span class="hours"></span>';
+                    counter+= '<span class="minutes"> </span>';
+                    counter+= '<span class="seconds"> </span>';
+                    counter+= '<span class="secondTenths"> </span></div>';                               
+                    $.blockUI({ message: counter});       
                     $.post('/admin/settings/cutProject', { projectToCut: $("select#projectsToCut").val() })
                         .done(function(res){
+                            console.log('done cutting: ' + start.next().value);
                             $.unblockUI();
+                            
                             $('#projectsToDelete').append($('<option>', {
                                 value: res,
                                 text: res
@@ -75,7 +84,9 @@ block content
                             })); 
                         })
                         .fail(function(err){
-                            console.log(err.status + ': ' + err.statusText);
+                            console.log('Time: ' + start.next().value);
+                            console.log(err);                            
+                            $.unblockUI();
                         }); 
                 }
             });
@@ -108,5 +119,67 @@ block content
                     }
             });
             
+        });
+
+        function* timer() { 
+            let hours = 0;
+            let minutes = 0;
+            let seconds = 0;
+            let miliseconds = 0;
+            let inter = setInterval(function(){
+                ++miliseconds;
+                if(miliseconds == 100){
+                    miliseconds = 0;
+                    seconds++;
+                }
+                if(seconds == 60){
+                    minutes++;
+                    seconds = 0;
+                }
+                if(minutes == 60){
+                    hours++;
+                    minutes = 0;
+                }
+                
+               if(seconds < 9 && seconds.toString().length < 2){
+                  seconds = '0' + seconds;
+                }  
+                if(minutes < 9 && minutes.toString().length < 2){
+                  minutes = '0' + minutes;
+                }  
+                if(miliseconds < 9 && miliseconds.toString().length < 2){
+                  miliseconds = '0' + miliseconds;
+                } 
+                if(hours  < 9 && hours.toString().length < 2){
+                  hours = '0' + hours;
+                } 
+
+                $("#timer .secondTenths").html(miliseconds);	
+                $("#timer .seconds").html(seconds + ':');
+                $("#timer .minutes").html(minutes + ':');
+                $("#timer .hours").html(hours + ':');
+            }, 10);
+            yield hours + ':' + minutes + ':'+ seconds + ':' + miliseconds;
+            clearInterval(inter);
+            yield hours + ':' + minutes + ':'+ seconds + ':' + miliseconds;
+            return;
+        }             
+
+        jQuery.each( [ "put", "delete" ], function( i, method ) {
+            jQuery[ method ] = function( url, data, callback, type ) {
+                if ( jQuery.isFunction( data ) ) {
+                type = type || callback;
+                callback = data;
+                data = undefined;
+                }
+            
+                return jQuery.ajax({
+                url: url,
+                type: method,
+                dataType: type,
+                data: data,
+                success: callback
+                });
+            };
         });
 

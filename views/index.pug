@@ -4,7 +4,7 @@ block content
   div(class='d-flex justify-content-center')
     div(class="card")
       article(class="card-body")
-        form(id="login" method="post" action="/")
+        form(id="login" method="post" action="/login")
           div(class="form-group")
             div(class="input-group")
               div(class="input-group-prepend")
@@ -22,6 +22,9 @@ block content
           div(class="form-group")
             button(type="submit" class="btn btn-primary btn-block") Войти
             button(id="guestButton" class="btn btn-primary btn-block") Войти гостем
+          #message
+          if message
+              h1.text-center.error-message #{loginMessage}
   script.
     $(document).ready(function () { 
       $('#guestButton').click(function(e){

@@ -21,9 +21,9 @@ module.exports.export = async function(project_name){
         recursive: true
       });
 
-    let query = "SELECT a.task as `Task`, '' as `Package`, case when a.status = 1 then 'Не грубая ошибка' when a.status = 2 then 'Грубая ошибка' end as `Status`, a.project_name as `Project`, '' as `Verificator`, a.username as `Controller` FROM ver_db.answers as a  where a.status in (1,2) and a.project_name = '1_ege_2019_04_10_all' order by 1;"
+    let query = "SELECT a.task as `Task`, '' as `Package`, case when a.status = 1 then 'Не грубая ошибка' when a.status = 2 then 'Грубая ошибка' end as `Status`, a.project_name as `Project`, '' as `Verificator`, a.username as `Controller` FROM ver_db.answers as a where a.status in (1,2) and a.project_name = ? order by 1;";
 
-    pool.execute(query)
+    pool.execute(query,[project_name])
       .then(rows => { 
         worksheet.columns = [
             { header: 'Пакет', key: 'Package' },

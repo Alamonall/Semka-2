@@ -43,70 +43,76 @@ block content
                         $('#subjectList').prop('disabled', false);
                         getImages();
                     }
-                    else {
-                        let verifyControlTable = '<table id="verifyControlTable" class="table table-hover table-bordered">';
-                        verifyControlTable += '<tbody>';
-                        console.log(data);
-                        $.each(data, function (key, value) {
-                            verifyControlTable += '<tr height="110"><th class="info" scope="row">' + key + '</th>';
-                            verifyControlTable += '<td class="info" scope="row">' + value.value + '</td>';
-                            verifyControlTable += '<td class="img" status="0" id=\'' + value.id + '\'><img src=\'' + value.cropped_image + '\' class="img-fluid" alt=\'Изображение со значением: ' + value.value + '\' />';
-                            verifyControlTable += '</td>';
-                            verifyControlTable += '<td><ul class="list-unstyled">';
-                            verifyControlTable += '<li>' + 'Задание: ' + value.task + '</li>'
-                            verifyControlTable += '<li>' + 'ФИО:' + '</li>'
-                            verifyControlTable += '<li>' + 'Никнейм:' + '</li>'
-                            verifyControlTable += '<li><a class="popup-link-to-original-image" href=\''+value.original_image+'\'>Ссылка на бланк</a></li></ul></td>'
-                            verifyControlTable += '</tr>';
-
-                        })
-                        verifyControlTable += '</tbody></table>'
-                        verifyControlTable += '<div><button id="sendResult" class="btn btn-primary">Отправить</button></div>'
-
-                        //Удаление кнопок "отправить на контроль". Не уверен, что удаление это хороший путь, но пока так
-                        $('#formForGoToVerifyButtons').remove();
-                        $('#answersTable').html(verifyControlTable); 
-
-                        $('#verifyControlTable td.img').bind('click', function () {
-                            if ($(this).attr("status") == 0) {
-                                $(this).attr("status", 1);
-                                $(this).css('background-color', 'blue');
-                            } else if ($(this).attr("status") == 1) {
-                                $(this).attr("status", 2);
-                                $(this).css('background-color', 'red');
-                            } else if ($(this).attr("status") == 2) {
-                                $(this).attr("status", 0);
-                                $(this).css('background-color', 'inherit');
-                            }
-                        });
-
-                        $('#sendResult').bind('click', function (e) {
-                            e.preventDefault();
-                            bindSendResultsButton();
-                        });
-
-                        /*ссылка на оригинальное изображение*/
-                        $('.popup-link-to-original-image').bind('click', function(e){
-                            e.preventDefault();
-                            $('.popup-link-to-original-image').magnificPopup({ type: 'image' });
-                        });
-                        }
-                    })
-                    .fail(function (err) {
-                        console.log(err);
-                    });
-            } 
+                    else 
+                        setDataForVerification(data)
+                })
+                .fail(function (xhr, status, error) {
+                    console.log('Status: ' + status + ' Message:' + error);
+                });
+            }
 
         /*
-        Получение таблицы ответ(кол-во изображений) на основе выбранного предмета и проекта
+        формирование списка с изображениями для верификации и добавление его на страницу
+        */    
+        function setDataForVerification(data){
+            let verifyControlTable = '<table id="verifyControlTable" class="table table-hover table-bordered">';
+            verifyControlTable += '<tbody>';
+            console.log(data);
+            $.each(data, function (key, value) {
+                verifyControlTable += '<tr height="110"><th class="info" scope="row">' + key + '</th>';
+                verifyControlTable += '<td class="info" scope="row">' + value.value + '</td>';
+                verifyControlTable += '<td class="img" status="0" id=\'' + value.id + '\'><img src=\'' + value.cropped_image + '\' class="img-fluid" alt=\'Изображение со значением: ' + value.value + '\' />';
+                verifyControlTable += '</td>';
+                verifyControlTable += '<td><ul class="list-unstyled">';
+                verifyControlTable += '<li>' + 'Задание: ' + value.task + '</li>'
+                verifyControlTable += '<li>' + 'ФИО:' + '</li>'
+                verifyControlTable += '<li>' + 'Никнейм:' + '</li>'
+                verifyControlTable += '<li><a class="popup-link-to-original-image" href=\''+value.original_image+'\'>Ссылка на бланк</a></li></ul></td>'
+                verifyControlTable += '</tr>';
+
+            })
+            verifyControlTable += '</tbody></table>'
+            verifyControlTable += '<div><button id="sendResult" class="btn btn-primary">Отправить</button></div>'
+
+            //Удаление кнопок "отправить на контроль". Не уверен, что удаление это хороший путь, но пока так
+            $('#formForGoToVerifyButtons').remove();
+            $('#answersTable').html(verifyControlTable); 
+
+            $('#verifyControlTable td.img').bind('click', function () {
+                if ($(this).attr("status") == 0) {
+                    $(this).attr("status", 1);
+                    $(this).css('background-color', 'blue');
+                } else if ($(this).attr("status") == 1) {
+                    $(this).attr("status", 2);
+                    $(this).css('background-color', 'red');
+                } else if ($(this).attr("status") == 2) {
+                    $(this).attr("status", 0);
+                    $(this).css('background-color', 'inherit');
+                }
+            });
+
+            $('#sendResult').bind('click', function (e) {
+                e.preventDefault();
+                sendResult();
+            });
+
+            /*ссылка на оригинальное изображение*/
+            $('.popup-link-to-original-image').bind('click', function(e){
+                e.preventDefault();
+                $('.popup-link-to-original-image').magnificPopup({ type: 'image' });
+            });
+        }
+
+        /*
+        Получение таблицы значений для верификации(кол-во изображений) на основе выбранного предмета и проекта
         */ 
         function getImages() {            
             $.post('/admin/verifycontrol/getImages', { subjectCode: $("select#subjectList").val(), projectName: $("select#projectList").val() })
                 .done(function (data) {
                     setTable(data);
                 })
-                .fail(function (err) {
-                    console.log('Шо то не так( ' + err);
+               .fail(function (xhr, status, error) {
+                    console.log('Status: ' + status + ' Message:' + error);
                 });
         };
 
@@ -131,8 +137,8 @@ block content
                     //Удаление таблички с вариантами для верификации. Зачем? Её здесь быть не должно на данном этапе
                     $('#preVerifyControlTable').remove();
                 })
-                .fail(function () {
-                    console.log('Шо то не так( ' + document.getElementById('projectList').value);
+                .fail(function (xhr, status, error) {
+                    console.log('Status: ' + status + ' Message:' + error);
                 });
         };
 
@@ -140,9 +146,6 @@ block content
         формирование таблицы с ответами для контроля верификации
         */
         function setTable(data) {
-            if(data.length == 0){
-
-            }
             console.log('data.length=' + data.length);
             let numOfRows = 0,
                 numOfCols = 10;
@@ -181,6 +184,7 @@ block content
             $('#preVerifyControlTable input').bind('click', function () {
                 $(this).css('background-color', 'green');
             });
+
             let buttons = '<form id=\'formForGoToVerifyButtons\' action=\'/admin/verifycontrol/onhand\')>'
             buttons +=  '<button id=\'goToVerifyButton\' type=\'submit\'  class=\'btn btn-primary\'> Проверить выбранные </button>';
             buttons += '<button id=\'goToVerifyButtonFirstFifty\' type=\'submit\'  class=\'btn btn-primary\'> Проверить первые 500 </button>';
@@ -210,11 +214,11 @@ block content
                 //localStorage.setItem('data', data);
                 getDataForVerification(data);
             } else {
-                alert('Не выбраны данные для проверки');
+                console.log('Не выбраны данные для проверки');
             }
         };
 
-        function bindSendResultsButton() {
+        function sendResult() {
             let resultOfVerifyControl = $("td[class=\'img\']");     
             if(resultOfVerifyControl.length == 0)
                 console.log('Почему-то изображений 0');
