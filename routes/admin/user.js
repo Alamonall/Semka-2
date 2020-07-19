@@ -6,13 +6,11 @@ const excelExporter = require('../../services/excelExporter.js');
 const mysql = require("mysql2");
 const passport = require('passport');
 
-let _imagePool = 500;
-
 const pool = mysql.createPool({
   host: "localhost",
   user: "root",
   database: "ver_db",
-  password: "Adminspassword"
+  password: "admin"
 }).promise();
 
 
@@ -47,13 +45,16 @@ router.get('/settings', (req, res) => {
   process.stdout.write("\033c");
 
   pool.execute("select distinct project_name from answers order by 1")
-    .then(rows => {
-      res.render('settings', {
-        projectsToCut: inst.GetListProjectsForCutting(),
-        completeProjects: rows[0],
-        imagePool: _imagePool, 
-        user: !!req.user ? req.user : 'None'
-      });
+    .then(projects => {
+      pool.execute('select value from config where name = \'max_image_pool\'')
+        .then(imagePool => {
+          res.render('settings', {
+            projectsToCut: inst.GetListProjectsForCutting(),
+            completeProjects: projects[0],
+            imagePool: imagePool[0][0], 
+            user: !!req.user ? req.user : 'None'
+          });
+        })
     })
     .catch(err => {
       res.status(500).send(err.message);
@@ -80,7 +81,7 @@ router.post('/settings/cutProject', async (req, res) => {
     //переадрессация должна работать на основе сессии и вообще лучше через ajax подвтерждение резки сделать
     let completeProject;
     if(req.body.projectToCut){
-      completeProject = await cutter.cutTheImages(req.body.projectToCut);
+      completeProject = await cutter.cutTheImages(req.body.projectToCut, req.user);
       console.log('completeProject: ' + completeProject);
       res.status(200).send(completeProject);
       }
@@ -97,9 +98,8 @@ router.post('/settings/cutProject', async (req, res) => {
   }
 });
 
-router.put('/settings/saveImagePool', (req, res) => {
+router.post('/settings/saveImagePool', (req, res) => {
   console.log('put /settings/saveImagePool req.body.imagePool: ' + req.body.imagePool);
-  _imagePool = req.body.imagePool;
   pool.execute('update ver_db.config set value = ? where name = \'max_image_pool\'',[req.body.imagePool])
     .then(()=>{
       res.status(200).send('Image pool is saved');
@@ -110,10 +110,26 @@ router.put('/settings/saveImagePool', (req, res) => {
   
 })
 
-router.post('/settings/exportToTheExcel', async (req,res)=>{
-  console.log('post of export to the excel');
-  let work = await excelExporter.export(req.body.projectName);
-  res.status(200).send(work);    
+router.post('/settings/exportToTheExcel', (req, res) => {
+  try{
+    console.log('post of export to the excel with ' + req.body.projectName);
+    let query = "SELECT a.task as `Task`, '' as `Package`, case when a.status = 1 then 'Не грубая ошибка' when a.status = 2 then 'Грубая ошибка' end as `Status`, a.project_name as `Project`, '' as `Verificator`, a.username as `Controller`, u.surname as `Surname`, u.name as `Name`, u.secondname as `SecondName` FROM ver_db.answers as a inner join ver_db.users as u on u.username =  a.username where a.status in (1,2) and a.project_name = ? order by 1;";
+    pool.execute(query, [req.body.projectName])
+      .then((rows)=>{
+        res.status(200).send(rows[0]);
+      })
+    /*excelExporter.export(req.body.projectName)
+    .then((link) => {
+      console.log('export: ' + link);  
+      res.status(200).sendFile(link);
+    })*/
+    .catch((err) =>{
+      console.log(err);
+    })  
+  }
+  catch (e){
+    console.log(e);
+  }  
 })
 
 router.get('/verifycontrol', (req, res) => {
@@ -154,8 +170,7 @@ router.post('/verifycontrol/getSubjects', (req, res) => {
 Получение списка изображений на основе выбранного имени проекта и кода предмета
 */
 router.post('/verifycontrol/getImages', (req, res) => {
-  let timeInMs = Date.now();
-  console.log('post /get images by admin: ' + req.body.subjectCode + ', ' + req.body.projectName);
+  console.log('post /getImages by admin: ' + req.body.subjectCode + ', ' + req.body.projectName);
   pool.execute('select answers.value as value, count(answers.value) as count from answers where onhand = 0 and project_name = \'' + req.body.projectName + '\' and subject_code = ' + req.body.subjectCode + ' group by(answers.value) order by answers.value')
     .then(imgs => {      
       res.status(200).send(imgs[0]);
@@ -174,21 +189,26 @@ router.post('/verifycontrol/onhand', (req, res) => {
     /*
     ValuesInOneString - Значение (количество значений)
     */
-    console.log('post onhand: ' + req.body.values + 'pr: ' + req.body.projectName + ' sb: ' + req.body.subjectCode + '; user: ' + 'user448'/*req.session.passport.username*/);
+    console.log('post onhand: ' + req.body.values + '; pr: ' + req.body.projectName + '; sb: ' + req.body.subjectCode + '; user: ' + 'user448'/*req.session.passport.username*/);
     let timeInMs = Date.now();
 
     //получение списка файлов для верификации
-    let sqlSelect = 'select distinct * from answers where value in (' + req.body.values + ') and project_name = \'' + req.body.projectName + '\' and subject_code = ' + req.body.subjectCode + ' and onhand = 0 order by value limit ' + _imagePool;
-    let sqlUpdate = 'update answers set onhand = 1, username = \'' + 'user448'/*req.session.passport.user*/ + '\' where value in (' + req.body.values + ') and project_name = \'' + req.body.projectName + '\' and subject_code = ' + req.body.subjectCode + ' limit 500;'
-    pool.execute(sqlSelect, (err, rows) => {
-      console.log('successfully select data');
-      console.log('user: ' + 'user448'/*req.session.passport.user*/ + '; time for post /verifycontrol/onhand: ' + JSON.stringify(Date.now() - timeInMs));
-      res.status(200).send(rows);
-      //обновление данных в бд, которые были взяты на контроль
-      pool.execute(sqlUpdate, () => {
-        console.log('succesfully update data');
-      });
-    });
+    let incomingData = JSON.stringify(req.body.values).substring(1, JSON.stringify(req.body.values).length - 1);
+    let sqlSelect = 'select distinct * from answers where value in (' + incomingData + ') and project_name = \'' + req.body.projectName + '\' and subject_code = ' + req.body.subjectCode + ' and onhand = 0 order by value limit 500' ;
+    let sqlUpdate = 'update answers set onhand = 1, username = \'user448\' where value in (' + incomingData + ') and project_name = \'' + req.body.projectName + '\' and subject_code = ' + req.body.subjectCode + ' limit 500;'
+    pool.execute(sqlSelect)
+      .then((rows) => {
+        console.log('successfully select data: ' + JSON.stringify(rows[0]));
+        console.log('user: ' + 'user448'/*req.session.passport.user*/ + '; time for post /verifycontrol/onhand: ' + JSON.stringify(Date.now() - timeInMs));
+        res.status(200).send(rows[0]);
+        //обновление данных в бд, которые были взяты на контроль
+        pool.execute(sqlUpdate)
+          .then((rows) => {
+            console.log('succesfully update data: ' + JSON.stringify(rows[0]));
+          })
+          .catch( err => console.log(err));
+      })
+      .catch(err => console.log(err));
   }
   catch(err){
     console.log('err: ' + err);

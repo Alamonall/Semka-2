@@ -1,62 +1,61 @@
-const express = require('express');
-const path = require('path');
-const passport = require('passport');
-require('./config/passport')(passport);
-const logger = require('morgan'); //логи get и post запросов выдаёт в консоль 
-const  createError = require('http-errors'); //??
-const flash = require('connect-flash'); // для подписей при неудачной авторизации
-const bodyParser = require('body-parser');
-const session = require('express-session');
+const express = require('express'),
+  path = require('path'),
+  passport = require('passport') 
+  require('./config/passport')(passport),
+  logger = require('morgan'), //логи get и post запросов выдаёт в консоль 
+  createError = require('http-errors'), //??
+  flash = require('connect-flash'), // для подписей при неудачной авторизации
+  bodyParser = require('body-parser'),
+  session = require('express-session');
 
 const app = express();
 
-const adminsRouter = require('./routes/admin/admins');
-const usersRouter = require('./routes/user/users');
+const userRouter = require('./routes/admin/user'); 
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('public', path.join(__dirname, 'public'));
 app.set('view engine', 'pug');
 
-app.use(bodyParser.urlencoded({
-  extended: true,
-  limit: '50mb'
-}));
-app.use(bodyParser.json({
-  limit: '50mb'
-}));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+app.use(bodyParser.json({ limit: '50mb' }));
 
 app.use(logger('dev'));
 app.use(session({
   secret: 'woot',
-  resave: true,
   rolling: true,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
   cookie: {maxAge: 300000} //3600000 for 1 hour
 }));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/admin/', adminsRouter);
-app.use('/user/', usersRouter);
+app.use('/private/', userRouter); 
 
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
+app.use(function( req, res, next) { 
+  res.locals.message = req.flash();
+  next();
+});
 
-app.all('/admin/*', (req, res, next) => {
-  console.log('req.isAuthenticated(): ' + req.isAuthenticated());
+/*app.all('/admin/*', (req, res, next) => {
   if (req.isAuthenticated())    
     return next();  
   res.redirect('/');
-});
+});*/
 
-app.get('/', (req, res) => {
+app.all('private', mustAuth);
+app.all('private/*', mustAuth);
+
+app.get('/', (req, res) => { 
   res.render('index');
 });
 
 app.post('/login', passport.authenticate('local-login', {  
-  failureRedirect: '/',
+  failureRedirect: '/',  
   failureFlash: true
 }), (req,res)=>{
   res.render('home', {
@@ -84,5 +83,12 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.render('error');
 });
+
+
+function mustAuth(req, res, next){
+  req.isAuthenticated()
+    ? next()
+    : res.redirect('/');
+};
 
 module.exports = app;

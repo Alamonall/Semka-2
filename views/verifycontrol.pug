@@ -5,7 +5,7 @@ include menu-partial
 block content   
     +admin-list
     div(class='container-fluid')
-        form(method='get' action='/admin/verifycontrol/onhand')
+        form(method='get' action='/private/verifycontrol/onhand')
             div(class='form-group row')
                 label(class="col-sm-3 col-form-label") Проекты:
                 div(id='projectSelect' class='col-sm-6')
@@ -33,10 +33,12 @@ block content
         });
 
         /*получение данных для составления списка изображений для верификации (непосредственно верификация)*/
-        function getDataForVerification(data){        
-            $.post( '/admin/verifycontrol/onhand', data)
+        function getDataForVerification(values){        
+            $.post( '/private/verifycontrol/onhand', values)
                 .done(function (data) {
-                    if(data.length == 0){
+                    console.log('getDataForVerification');
+                    if(data.length == 0){                 
+                        console.log('getDataForVerification data.length: '  + data.length);       
                         $("#verifyControlTable").remove();
                         $("#sendResult").remove();
                         $('#projectList').prop('disabled', false);
@@ -57,7 +59,7 @@ block content
         function setDataForVerification(data){
             let verifyControlTable = '<table id="verifyControlTable" class="table table-hover table-bordered">';
             verifyControlTable += '<tbody>';
-            console.log(data);
+            console.log('setDataForVerification: ' + data);
             $.each(data, function (key, value) {
                 verifyControlTable += '<tr height="110"><th class="info" scope="row">' + key + '</th>';
                 verifyControlTable += '<td class="info" scope="row">' + value.value + '</td>';
@@ -107,8 +109,9 @@ block content
         Получение таблицы значений для верификации(кол-во изображений) на основе выбранного предмета и проекта
         */ 
         function getImages() {            
-            $.post('/admin/verifycontrol/getImages', { subjectCode: $("select#subjectList").val(), projectName: $("select#projectList").val() })
+            $.post('/private/verifycontrol/getImages', { subjectCode: $("select#subjectList").val(), projectName: $("select#projectList").val() })
                 .done(function (data) {
+                    console.log('getImages: ' + JSON.stringify(data));
                     setTable(data);
                 })
                .fail(function (xhr, status, error) {
@@ -120,7 +123,7 @@ block content
         Получение списка предметов на основе выбранного проекта
         */
         function getSubjects() {
-            $.post('/admin/verifycontrol/getSubjects', {projectName: $("select#projectList").val()})
+            $.post('/private/verifycontrol/getSubjects', {projectName: $("select#projectList").val()})
                 .done(function (data) {
                     console.log('done by get subjects ' + data.length);
                     let select = '<select id="subjectList" class="form-control"><option value="Выберите предмет" selected="selected">Выберите предмет</option>';
@@ -162,7 +165,7 @@ block content
             for (let i = 0; i < numOfRows; i++) {
                 tableBody += '<tr>';
                 //console.log("rows it: " + i + 'and ' + Math.floor(data.length/10));
-                //проверка на не полные столбы
+                //проверка на не полные столбцы
                 if (i == Math.floor(data.length / 10)) {
                     numOfCols = data.length % 10;
                     //console.log("numcOfCols: " +numOfCols);
@@ -185,23 +188,24 @@ block content
                 $(this).css('background-color', 'green');
             });
 
-            let buttons = '<form id=\'formForGoToVerifyButtons\' action=\'/admin/verifycontrol/onhand\')>'
+            let buttons = '<form id=\'formForGoToVerifyButtons\' action=\'/private/verifycontrol/onhand\')>'
             buttons +=  '<button id=\'goToVerifyButton\' type=\'submit\'  class=\'btn btn-primary\'> Проверить выбранные </button>';
             buttons += '<button id=\'goToVerifyButtonFirstFifty\' type=\'submit\'  class=\'btn btn-primary\'> Проверить первые 500 </button>';
             buttons += '</form>'
             $('#divForGoToVerifyButtons').html(buttons);
             $('#goToVerifyButtonFirstFifty').bind('click', function (e) {
                 e.preventDefault();
-                bindGoToVerifyButton($('input[type=\'checkbox\']'));
+                verify($('input[type=\'checkbox\']'));
             });
             $('#goToVerifyButton').bind('click', function (e) {
                 e.preventDefault();
-                bindGoToVerifyButton($("input[type=\'checkbox\']:checked"));
+                verify($("input[type=\'checkbox\']:checked"));
             });
         };
 
-        function bindGoToVerifyButton(values) {               
+        function verify(values) {                        
             if (values.length) {
+                console.log('verify values length: ' + values.length);   
                 $('#projectList').prop('disabled', true);
                 $('#subjectList').prop('disabled', true);
                 let data = {};
@@ -211,7 +215,7 @@ block content
                 for (i = 0; i < values.length; i++) {
                     data.values[i] = $('#' + values[i].id).val();
                 }
-                //localStorage.setItem('data', data);
+                console.log('verify data length: ' + data.length);  
                 getDataForVerification(data);
             } else {
                 console.log('Не выбраны данные для проверки');
@@ -225,11 +229,12 @@ block content
             let data = {};
             data.imageIds = {};
             data.statuses = {};
+            data.user = {};
             for (let i = 0; i < resultOfVerifyControl.length; i++) { 
                 data.imageIds[i] = $('#'+resultOfVerifyControl[i].id).attr('id');
                 data.statuses[i] = $('#'+resultOfVerifyControl[i].id).attr('status');
             }
-            $.post('/admin/verifycontrol/sendResult', data)
+            $.post('/private/verifycontrol/sendResult', data)
                 .done(function (data) {
                     console.log('send result success ' + data.response); //location.href=location.href;
                 })

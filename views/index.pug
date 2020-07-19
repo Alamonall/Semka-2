@@ -21,17 +21,6 @@ block content
                 placeholder="******" type="password")
           div(class="form-group")
             button(type="submit" class="btn btn-primary btn-block") Войти
-            button(id="guestButton" class="btn btn-primary btn-block") Войти гостем
           #message
-          if message
-              h1.text-center.error-message #{loginMessage}
-  script.
-    $(document).ready(function () { 
-      $('#guestButton').click(function(e){
-        e.preventDefault();
-        $.ajax({
-          type:'post',
-          url:'/guest'
-        })
-      })
-    })
+          if locals.flashMessages
+              p.text-center.error-message #{flashMessages.loginMessage}

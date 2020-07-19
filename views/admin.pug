@@ -43,7 +43,7 @@ block content
 
 		function clearNotFinishedAnswersData(userName){
 			console.log('clearNotFinishedAnswersData(' + userName + ')');
-			$.post('/admin/admin/clearNotFinishedData', {userName: userName})
+			$.post('/private/admin/clearNotFinishedData', {userName: userName})
 				.done(function(res){
 					console.log(res);
 					$('#notFinishedAnswersCount').val(0);

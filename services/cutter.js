@@ -13,7 +13,7 @@ const readFile = util.promisify(fs.readFile);
 const mkdir = util.promisify(fs.mkdir);
 const readdir = util.promisify(fs.readdir);
 
-module.exports.cutTheImages = async function (projectName) {
+module.exports.cutTheImages = async function (projectName, user) {
     let dir = path.join(__dirname, '../public/projects/', projectName, '/batches/00000000');
     let pathsToTheAud = fs.readdirSync(dir);
     let listOfBlanks = []; //список бланков
@@ -23,7 +23,7 @@ module.exports.cutTheImages = async function (projectName) {
       host: 'localhost',
       user: 'root',
       database: 'ver_db',
-      password: 'Adminspassword',
+      password: 'admin',
     }).promise();
 
     //создание папки с проектом, если её нет
@@ -100,12 +100,13 @@ module.exports.cutTheImages = async function (projectName) {
             /*
               вставка данных в бд об обрезанном изображении
             */
-            let sql = 'insert into answers(`status`, `onhand`, `value`, `cropped_image`, `original_image`, `subject_code`, `project_name` , `task`)' +
-              ' values(?, ? , ? , ? , ?, ? ,?, ?)';
+            let sql = 'insert into answers(`status`, `onhand`, `value`, `cropped_image`, `original_image`, `subject_code`, `project_name` , `task`, `username`)' +
+              ' values(?, ? , ? , ? , ?, ? ,?, ?, ?)';
 
             let inserts = [0, 0, page.block[i]._, '\\memory\\' + projectName + '\\images\\' + /*код предмета*/ page.block[3]._ + '\\' +
               + /*штрих-код изображения*/ page.block[1]._ + '\\' + page.block[3]._ + '_' + path.parse(item).name + '_' + page.block[i].ATTR.blockName + '.png',
-              '\\projects\\' + projectName + '\\batches\\00000000\\' + item + '.TIF', /*Код предмета*/ page.block[3]._, projectName, /*номер задания*/ page.block[i].ATTR.blockName
+              '\\projects\\' + projectName + '\\batches\\00000000\\' + item + '.TIF', /*Код предмета*/ page.block[3]._, projectName, /*номер задания*/ page.block[i].ATTR.blockName,
+              user ? user.username : 'null'
             ];
 
             pool.execute(sql, inserts);
@@ -116,7 +117,7 @@ module.exports.cutTheImages = async function (projectName) {
 
       return await Promise.all(allPromises).then(() => {
         let promiseTime = Date.now() - timeInMs;
-        console.log('done from console: ' + (promiseTime / 1000 / 60) + 'minutes');
+        console.log('done from console: ' + promiseTime);
         return projectName;
       });
     } catch (err) {

@@ -6,7 +6,7 @@ const pool = mysql.createPool({
     host: "localhost",
     user: "root",
     database: "ver_db",
-    password: "Adminspassword"
+    password: "admin"
 }); 
 // expose this function to our app using module.exports
 module.exports = function(passport) {

@@ -3,14 +3,18 @@ mixin admin-list
         nav(class="navbar sticked-top navbar-dark bg-primary")
             a(id='logo' class="navbar-brand mb-0 h1" href="/") Semka 2000
             ul( id='menu' class='nav justify-content-center')
+            if (user.privileges == "admin")
                 li(class='nav-item')
-                    a(class="nav-link text-white" href='/admin/admin') Администрирование
+                    a(class="nav-link text-white" href='/private/admin') Администрирование
                 li(class='nav-item')
-                    a(class="nav-link text-white" href='/admin/settings') Настройки
+                    a(class="nav-link text-white" href='/private/settings') Настройки
                 li(class='nav-item')
-                    a(class="nav-link text-white" href='/admin/verifycontrol') Контроль верификации                    
+                    a(class="nav-link text-white" href='/private/verifycontrol') Контроль верификации   
+            else if (user.privileges == "user")
+                li(class='nav-item')
+                    a(class="nav-link text-white" href='/private/admin') Пользователь
+                li(class='nav-item')
+                    a(class="nav-link text-white" href='/private/verifycontrol') Контроль верификации                    
             form(class='form-inline my-2 my-lg-0' id='logout' action='logout' method='get')
                 a(class="nav-link text-white" href='/')= user.username
                 button( id='exitButton' type="submit" class="btn btn-danger" ) Выход            
-mixin user-list
-    
