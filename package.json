@@ -34,7 +34,7 @@
     "passport-local": "^1.0.0",
     "progressbar.js": "^1.1.0",
     "pug": "^2.0.4",
-    "redis": "^3.0.2",
+    "redis": "^3.1.1",
     "rfs": "^9.0.2",
     "sharp": "^0.23.1",
     "uuid": "^3.3.3",
